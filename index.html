@@ -968,6 +968,381 @@ Look for `RNN_sentiment_classification.ipynb`.
 
 ---
 
+# Deploying our model to production
+
+We've seen how `pld-devserver` works for running a web service
+locally, but how do we go about making available our model on an
+actual server?
+
+We will now walk through these steps:
+
+- Set up an AWS account (if you don't have one yet)
+- Set up an EC2 micro instance
+- SSH into the instance to install dependencies and run the Palladium
+  web service
+
+---
+
+# Register and sign in to AWS console
+
+Go to the [aws.amazon.com](https://aws.amazon.com/) and click *Sign In
+to the Console*.  If you don't have an account yet, you can register
+by clicking *Create a new AWS account*.  It will ask you to put your
+credit card information and telephone number.  However, the micro
+instance that we use will cost you nothing.  (Just make sure you
+remove it later.  It's free for one year.)
+
+---
+
+# Launch a new EC2 instance
+
+Under the *Services* drop-down, click *EC2*.  If you're not using EC2
+yet, it will say *0 Running Instances*.  Click this link and then
+click the blue *Launch Instance* button to set up a micro instance.
+
+In the first step, choose *Ubuntu Server 18.04 LTS* as the *Amazon
+Machine Image (AMI)*.  In the second step, choose the *t2.micro*
+instance type.  You can then click the blue *Review and Launch*
+button.
+
+Lastly, when you now click *Launch*, it will display a pop-up with
+which you can *Create a new key pair*.  The name doesn't matter, maybe
+choose something like *DSR Key* and click *Download Key Pair*.  This
+will download a file with the ending *.pem*.  Keep this file in a safe
+place; you will need it to log in to your instance.
+
+After launching you should be able to view your instance in the
+overview.
+
+![:scale 100%](./resources/ec2-instances.png)
+
+---
+
+# Open up additional ports to your EC2 instance
+
+In the overview of instances, look at the bottom pane and navigate to
+*Security groups* and click *launch-wizard-1*.  You will now find
+yourself on a screen that lists your security groups.  On the bottom
+third of the screen, you'll see a tab called *Inbound*.  Click *Edit*
+and then *Add Rule*.  From the *Type* dropdown, choose *HTTP*.  Then,
+add another rule and choose *HTTPS*.  You can leave the defaults as is
+and confirm by clicking the blue *Save* button.  We have now opened up
+ports 80 and 443 on our EC2 instance.  This will be useful later on,
+when we access our web service through these ports.
+
+![:scale 80%](./resources/ec2-inbound-rules.png)
+
+---
+
+# SSH into your EC2 instance
+
+Your EC2 instance has a public IPv4 address.  In this example it's
+35.157.232.182:
+
+![:scale 100%](./resources/ec2-instances.png)
+
+You may already have an SSH client installed.  Try:
+
+```bash
+$ ssh -V
+OpenSSH_7.6p1 Ubuntu-4ubuntu0.2, OpenSSL 1.0.2n  7 Dec 2017
+```
+
+If you do, you can now log in to your EC2 instance by issuing this
+command:
+
+```bash
+$ ssh -i path/to/DSRKey.pem ubuntu@35.157.232.182
+```
+
+Once you have successfully logged in, you should see a prompt like
+this one:
+
+```bash
+ubuntu@ip-172-31-42-9:~$
+```
+
+---
+
+# SSH into your EC2 instance: possible issues
+
+If you're on Ubuntu and you don't have `ssh` installed, you can
+install it like so:
+
+```bash
+$ sudo apt install openssh-client
+```
+
+If you encounter an error saying: *It is required that your private
+key files are NOT accessible by others*, then run this command (once)
+before you run `ssh`:
+
+```bash
+$ chmod 600 path/to/DSRKey.pem
+$ ssh -i path/to/DSRKey.pem ubuntu@35.157.232.182
+```
+
+On newer versions of Windows, the OpenSSH client should be installed
+by default in `C:\Windows\System32\OpenSSH`.  If it's not installed,
+try navigating to *Settings App > Apps > Settings & Apps > Manage
+Optional Features > Add Feature* and select the *OpenSSH Client*.
+
+Once you have successfully logged in, you should see a prompt like
+this one:
+
+```bash
+ubuntu@ip-172-31-42-9:~$
+```
+
+---
+
+# Install dependencies on our EC2 instance
+
+First, let's install a couple of dependencies that we'll need:
+
+```bash
+$ sudo apt update && sudo apt upgrade
+$ sudo apt install python3-venv python3-dev build-essential
+```
+
+Next, we'll check out this repo from Github and create a virtualenv
+inside of it:
+
+```bash
+$ git clone https://github.com/naturalvision/dsr-2019.git
+...
+$ python3 -m venv dsr-2019
+$ cd dsr-2019
+$ source bin/activate
+```
+
+The last command will change our prompt to look something like this:
+
+```
+(dsr-2019) ubuntu@ip-172-31-42-9:~/dsr-2019$
+```
+
+We can now proceed to install Python dependencies:
+
+
+```bash
+$ pip install -U pip
+$ pip install -r step1/requirements.txt
+...
+Successfully installed ...
+```
+
+---
+
+# Use Gunicorn to serve the web service
+
+We've previously used `pld-devserver` to run requests against
+Palladium's built-in web service.  `pld-devserver` uses Flask's
+built-in web server that's suitable for development, but not for
+production environments.  Instead, we'll now install and use
+[Gunicorn](https://gunicorn.org/) to serve the web service:
+
+```bash
+$ pip install gunicorn
+$ cd step3
+$ export PALLADIUM_CONFIG=config.py
+$ pld-fit
+$ gunicorn palladium.wsgi:app -b 0.0.0.0:8080
+```
+
+Try to navigate your browser to this URL, and you'll notice that it's
+not yet working as expected.  There's no response:
+http://35.157.232.182/predict?sepal%20length=6.3&sepal%20width=2.5&petal%20length=4.9&petal%20width=1.5
+
+The problem is that we've asked Gunicorn to serve on port 8080, but
+the standard HTTP port which our browser connects to is port 80.  The
+issue is that only the `root` user can bind to port 80, and we don't
+want to run our application as root.  What can we do?  We can use
+[iptables](https://www.netfilter.org/):
+
+```bash
+$ sudo iptables -A PREROUTING -t nat -p tcp --dport 80 -j REDIRECT --to-ports 8080
+```
+
+---
+
+# But is it fast? Use `ab` to find out!
+
+A classic tool for benchmarking websites is `ab`, the Apache HTTP
+server benchmarking tool.  Let's install and run a thousand requests
+against our web service, with 10 requests at a time:
+
+```bash
+$ sudo apt install apache2-utils
+$ ab -n 1000 -c 10 "http://localhost:8080/predict?sepal%20length=6.3&sepal%20width=2.5&petal%20length=4.9&petal%20width=1.5"
+```
+
+In the output, look for something like this:
+
+```
+Requests per second:    250.49 [#/sec] (mean)
+```
+
+We can serve 250 requests per second.  That's not bad at all.  But
+let's have a closer look at where time is being spent.
+
+---
+
+# Profiling our web app
+
+To see where time is being spent on each request, let's install the
+[py-spy Python profiler](https://github.com/benfred/py-spy):
+
+```bash
+$ pip install py-spy  # do this from within your virtualenv!
+```
+
+We keep the Gunicorn process running in another window.  Note that
+Gunicorn prints out the process id (PID) of its worker when it starts
+up.  It looks something like this:
+
+```
+[2019-02-18 16:12:05 +0000] [5883] [INFO] Booting worker with pid: 5883
+```
+
+We can now use `py-spy` to attach to the Gunicorn worker and see what
+it's doing:
+
+```bash
+$ sudo su
+$ source bin/activate
+$ py-spy --pid 5883  # replace with the actual Gunicorn PID you just saw
+```
+
+---
+
+# Profiling our web app (2)
+
+You should see output similar to `top`.  The web server isn't doing
+much right now, but we can send another round of requests to it to see
+what it's doing when it's busy.  In a new terminal window, run another
+10000 requests using `ab` and switch back to the `py-spy` window to
+see what's happening.
+
+```bash
+$ ab -n 10000 -c 10 "http://localhost:8080/predict?sepal%20length=6.3&sepal%20width=2.5&petal%20length=4.9&petal%20width=1.5"
+```
+
+![:scale 100%](./resources/py-spy.png)
+
+How come we're spending most of our time executing SQL statements?
+What's the `read` function in `palladium.persistence` at line 421
+doing?  Find out!
+
+---
+
+# Profiling our web app (3)
+
+The culprit is the Palladium `model_persister`, which is set up to
+read the persisted model from disk on every request!  This is not
+useful at all.  Thankfully, there's a wrapper called
+`CachedUpdatePersister` that fixes this issue, as it keeps the model
+in memory.  Replace the `model_perister` entry in the
+`step3/config.py` configuration file with the following:
+
+```python
+    'model_persister': {
+        '__factory__': 'palladium.persistence.CachedUpdatePersister',
+        'impl': {
+            '__factory__': 'palladium.persistence.Database',
+            'url': 'sqlite:///iris-model.db',
+        },
+    },
+```
+
+Now run the `ab` test again.  How many requests per second do you get?
+
+---
+
+# What we did so far with our EC2 instance:
+
+- Set up the EC2 instance using the AWS console
+
+- Opened up additional network ports
+
+- Logged in using SSH and cloned this repo from Github
+
+- Installed system dependencies (`apt install`) and Python project
+  dependencies (`pip install`) on our EC2 instance
+
+- Used Gunicorn to serve the Palladium web service
+
+- Benchmarked (`ab`) and profiled (`py-spy`) our web service
+
+---
+
+# What we'll need to do next:
+
+- We're running the `gunicorn` process in our terminal in foreground.
+  If we close the terminal window, Gunicorn will stop working.  To fix
+  this issue, we'll use [Supervisor](http://supervisord.org/) to start
+  up the Gunicorn process and keep it running.
+
+- Anyone who knows our web service's address can now use it.  What's
+  worse, we're sending the data to predict for and the results over
+  the wire, without encryption.  We'll use HTTPS instead of HTTP, and
+  use [basic access
+  authentication](https://en.wikipedia.org/wiki/Basic_access_authentication)
+  to prevent eavesdropping and unauthorized use.
+
+---
+
+# Configure Supervisor to keep Gunicorn running
+
+Use `Ctrl+C` to shut down the `gunicorn` process (or alternatively,
+close the terminal window in which you're running it).
+
+On the server, create this supervisor config file and save it as
+`/home/ubuntu/dsr-2019/supervisor.conf`:
+
+```ini
+[program:webservice]
+command=/home/ubuntu/dsr-2019/bin/gunicorn palladium.wsgi:app -b 0.0.0.0:8080
+directory=/home/ubuntu/dsr-2019/step3/
+user=ubuntu
+environment=PALLADIUM_CONFIG="config.py"
+```
+
+You can find out more about [Supervisor's configuration files in the
+documentation](http://supervisord.org/configuration.html).
+
+---
+
+# Install and run Supervisor
+
+We install Supervisor with `apt install`:
+
+```bash
+$ sudo apt install supervisor
+```
+
+And we link the configuration file that we just wrote into a directory
+where Supervisor will pick it up:
+
+```bash
+$ sudo ln -s ~/dsr-2019/supervisor.conf /etc/supervisor/conf.d/
+```
+
+Now let's restart Supervisor and check if it's running our process:
+
+```bash
+$ sudo /etc/init.d/supervisor restart
+$ sudo supervisorctl status
+webservice                       RUNNING   pid 6630, uptime 0:00:22
+```
+
+At this point, we can log out from the server and the web service will
+keep running!  What's more, Supervisor will start up our web service
+when the EC2 box is ever restarted, and it will restart our web
+service should it ever crash with a Python exception or the like.
+
+---
+
 # End
 
 - https://github.com/ottogroup/palladium
