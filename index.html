@@ -1521,6 +1521,34 @@ $ /etc/init.d/supervisor start
 
 ---
 
+# Require authentication for our web service
+
+Now that our connection is secure from eavesdropping, how can we
+restrict access such that only people with a valid username and
+password can use it?
+
+Palladium allows us to add decorators to the existing web hooks.  One
+thing we can do with these decorators is to require authentication.
+Flask's website has [a snippet that implements HTTP Basic Auth as a
+decorator](http://flask.pocoo.org/snippets/8/).  You can find this
+snippet in `step8/mybasicauth.py`.
+
+What's left is to hook up this decorator with our Palladium web
+service.  Add this piece of configuration to
+`step8/palladium-config.py`:
+
+```python
+    'predict_decorators': [
+        'mybasicauth.requires_auth',
+    ],
+
+    'alive_decorators': [
+        'mybasicauth.requires_auth',
+    ],
+```
+
+---
+
 # End
 
 - https://github.com/ottogroup/palladium
