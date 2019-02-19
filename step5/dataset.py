@@ -9,10 +9,11 @@ class OpenML:
         # YOUR CODE HERE:
         #
         # Use scikit-learn's new `fetch_openml` function to download
-        # the dataset given by `self.name`.  The function returns a
-        # bunch object with two attributes, `dataset.data` and
-        # `dataset.target`.  You can print these to see what they look
-        # like.  Also print their shape, for example:
+        # the dataset given by `self.name`.  The `fetch_openml`
+        # function returns a bunch object with two attributes,
+        # `dataset.data` and `dataset.target`.  You can print these to
+        # see what they look like.  Also print their shape, for
+        # example:
         #
         #   print(dataset.data.shape)
         #   print(dataset.target.shape)

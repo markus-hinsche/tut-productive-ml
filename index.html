@@ -24,28 +24,23 @@ class: center, middle
 
 # Productive machine learning in Python
 
-Daniel Nouri, Natural Vision UG, datascienceresearch.com 2018
+Daniel Nouri, Natural Vision UG, datascienceretreat.com 2019
 
 ---
 
 # Agenda
 
-We'll focus on two things:
+We'll talk about:
 
-- Development cycle and putting models into production scalably
-- Common tasks in Machine Learning projects
+- A seamless workflow for developing machine learning models and
+  putting them in production
 
-1. Who am I?
-2. Palladium: Overview
-3. Palladium: Development cycle
-4. Hyperparameter search: Grid Search
-5. Palladium: Webservice
-6. scikit-learn: Pipelines
-7. Skorch: Neural networks
-8. Dask: Parallelisation
-9. Palladium: Datasets, OpenML
-10. Regression and classification
-11. Skorch: Sentiment analysis with RNNs
+- Solving common problems in machine learning projects, such as
+  modularization of code, hyperparameter optimization, and distributed
+  learning
+
+- Making available trained models through scalable and secure web
+  services
 
 ---
 
@@ -54,12 +49,12 @@ We'll focus on two things:
 Download this repository to be able to run code examples:
 
 ```bash
-$ git clone https://github.com/dnouri/dsr-2018.git
+$ git clone https://github.com/naturalvision/dsr-2019.git
 ```
 
 Slides are online at:
 
-https://dnouri.github.io/dsr-2018/
+https://naturalvision.github.io/dsr-2019/
 
 ---
 
@@ -67,7 +62,7 @@ https://dnouri.github.io/dsr-2018/
 
 - Machine Learning Consultant ([Natural Vision](http://naturalvision.de))
   * Development and training (Python and Machine Learning)
-- Clients: Otto Group, IKEA, Luxottica
+- Clients: Otto Group, IKEA, Luxottica, Toptal
 - Strengths:
   * Python (since 2000)
   * Open Source (since 2003)
@@ -77,7 +72,6 @@ https://dnouri.github.io/dsr-2018/
 ---
 
 # Palladium: Overview
-
 
 Palladium emerged from a Otto Group BI project to predict parcel
 delivery times.
@@ -190,7 +184,8 @@ configuration.  Here are some examples:
         'C': 0.1,
 ```
 
-- Differing configuration for production and development environments
+Also, we frequently have to deal with differing configuration between
+production and development environments
 
 ---
 
@@ -235,13 +230,32 @@ Collecting palladium (from -r step1/requirements.txt (line 1))...
 Successfully installed ...
 ```
 
-If you want to use [Conda](https://conda.io) instead because maybe
-you're on Windows and don't have Visual Code installed:
+---
+
+# Palladium: Installation - possible issues
+
+Maybe you're on Windows and you have trouble installing
+[ujson](https://pypi.org/project/ujson/) because you don't have Visual
+Code installed.  Then check out this site which has [binary wheels for
+ujson for Windows](https://www.lfd.uci.edu/~gohlke/pythonlibs/#ujson).
+Here's an example of how you would install ujson from that site (for
+Python 3.6):
+
+```bash
+$ pip install https://download.lfd.uci.edu/pythonlibs/r5uhg2lo/ujson-1.35-cp36-cp36m-win_amd64.whl
+```
+
+If you really want to use [Conda](https://conda.io) instead of vanilla
+Python:
 
 ```bash
 $ conda install ujson
 $ pip install -r step1/requirements.txt
 ```
+
+> **Note:** For this tutorial, it's not recommended to use Conda.  Use
+it if you know what you're doing, but be aware that some things will
+work differently for you going forward.
 
 ---
 
@@ -358,12 +372,39 @@ score.
 
 ---
 
-# Palladium: Webservice
+# Grid Search and cross validation
 
-Palladium implements a simple webservice, with which we can address
-our trained model via HTTP and make predictions.
+We set the `cv` parameter in our grid search configuration to 8, which
+means we want to use 8-fold cross validation.  Let's take a look again
+at the output of `pld-grid-search`:
 
-First we need to configure the webservice.  In our Iris example, this
+```
+...
+Fitting 8 folds for each of 5 candidates, totalling 40 fits
+...
+        params  split0_test_score  split1_test_score  split2_test_score  \
+3   {'C': 100}           1.000000           1.000000           1.000000
+
+   split3_test_score  split4_test_score  split5_test_score  split6_test_score  \
+3           0.916667           0.916667           1.000000           1.000000
+
+   split7_test_score  mean_test_score  std_test_score  rank_test_score  \
+3           1.000000             0.98        0.035590                1
+...
+```
+
+Using cross validation is very useful if you have a small dataset but
+you still want to get a good idea of how our model's real life
+performance will look like.
+
+---
+
+# Palladium: Web service
+
+Palladium implements a web service, with which we can use our trained
+model via HTTP to make predictions.
+
+First we need to configure the web service.  In our Iris example, this
 is what we need:
 
 ```python
@@ -420,16 +461,17 @@ Here's the implementation in `step3/predict.py`:
 
 ```python
 import sys
-
 from palladium.config import get_config
 
-
 def predict(features):
-    model = get_config()['model_persister'].read()
+    # Get hold of the Palladium configuration in config.py:
+    config = get_config()
+    # Use the model_persister to load the trained model:
+    model = config['model_persister'].read()
+    # From here on, it's plain scikit-learn:
     result = model.predict_proba([features])[0]
     for class_, proba in zip(model.classes_, result):
         print("{}: {:.1f}%".format(class_, proba*100))
-
 
 if __name__ == '__main__':
     predict([float(v) for v in sys.argv[1:]])
@@ -463,6 +505,30 @@ work:
 ```bash
 $ pip install -r step4/requirements-gpu.txt
 ```
+
+---
+
+# Why PyTorch?
+
+Here's from Stefano J. Attardi's blog post titled [How I Shipped a
+Neural Network on iOS with CoreML, PyTorch, and React
+Native](https://attardi.org/pytorch-and-coreml):
+
+> Like most people, I cut my neural teeth on TensorFlow. But my
+honeymoon period had ended. I was getting weary of the kitchen-sink
+approach to library management, the huge binaries, and the extremely
+slow startup times when training. TensorFlow APIs are a sprawling
+mess. Keras mitigates that problem somewhat, but it’s a leaky
+abstraction. Debugging is hard if you don’t understand how things work
+underneath.
+
+> PyTorch is a breath of fresh air. It’s faster to start up, which
+makes iterating more immediate and fun. It has a smaller API, and a
+simpler execution model. Unlike TensorFlow, it does not make you build
+a computation graph in advance, without any insight or control of how
+it gets executed. It feels much more like regular programming, it
+makes things easier to debug, and also enables more dynamic
+architectures – which I haven’t used yet, but a boy can dream.
 
 ---
 
@@ -599,10 +665,10 @@ class MyModule(nn.Module):
 # Learning rate
 
 One of the most important hyperparameters of neural networks is the
-*learning rate*.  It defines, how large our iterative steps are during
-gradient descent.  Gradient descent is the optimization algorithm
-that's used in neural networks and many other machine learning
-algorithms.
+*learning rate*.  It defines, how large our iterative steps are when
+doing gradient descent.  Gradient descent is the optimization
+algorithm that's used in neural networks and many other machine
+learning algorithms.
 
 ![:scale 80%](./resources/ng-learning-rate.png)
 
@@ -666,7 +732,7 @@ understand that the search can quickly take a long time.
 
 ```python
     'grid_search': {
-        'param_grid': {  # 3 * 4 * 4 * 5 = 240 fits!
+        'param_grid': {  # 3 * 4 * 4 * 5 folds = 240 fits!
             'net__lr': [0.03, 0.1, 0.3],
             'net__max_epochs': [50, 100, 200, 400],
             'net__num_units': [5, 10, 20, 40],
@@ -675,8 +741,8 @@ understand that the search can quickly take a long time.
 
 The search for the best hyperparameters is often the most
 computationally intense part of machine learning projects.  For this
-reason, scikit-learn supports the parallelization of Grid Search onto
-clusters via [Dask](http://dask.pydata.org):
+reason, scikit-learn supports the parallelization of Grid Search using
+a cluster of computers via [Dask](http://dask.pydata.org):
 
 > Dask is a flexible library for parallel computing in Python.
 
@@ -688,21 +754,22 @@ clusters via [Dask](http://dask.pydata.org):
 $ pip install dask distributed
 ```
 
-We start a scheduler inside a new terminal windows:
+Open up a new terminal window and start the Dask scheduler:
 
 ```bash
 $ source bin/activate
 $ dask-scheduler
 ```
 
-And a worker in another terminal window.  You may add an arbitrary
-number of these:
+Keep the scheduler running.  Now open another terminal window and
+start a worker.  You may add an arbitrary number of these, on any
+number of computers:
 
 ```bash
 $ source bin/activate  # on Windows: scripts/activate.bat
 $ cd step4
 $ export PYTHONPATH=.  # on Windows: set PYTHONPATH=.
-$ dask-worker 127.0.0.1:8786
+$ dask-worker 127.0.0.1:8786  # IP and port of scheduler
 ```
 
 Finally, we start our Grid Search like this (from inside the environment!):
@@ -736,7 +803,7 @@ $ pip install -U scikit-learn
 
 ---
 
-# Ein DatasetLoader fuer OpenML
+# A DatasetLoader for OpenML
 
 The configuration in `step5/config.py` was updated to refer to our new
 class `OpenML`, which reads our dataset from
@@ -752,7 +819,7 @@ class `OpenML`, which reads our dataset from
 ## Exercise 4
 
 Complete the implementation of the `OpenML` class in
-`step5/dataset.py`:
+`step5/dataset.py`.  The source file has important hints for you.
 
 ```python
 from sklearn.datasets import fetch_openml
