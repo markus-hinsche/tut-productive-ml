@@ -490,21 +490,8 @@ library for neural networks.  It's based on [PyTorch](https://pytorch.org).
 $ pip install -r step4/requirements-base.txt
 ```
 
-Look for the way to install PyTorch on your system on
+Look for the way to install PyTorch on your system using pip on
 http://pytorch.org
-
-If you are running Linux and you don't have CUDA, try this:
-
-```bash
-$ pip install -r step4/requirements-cpu.txt
-```
-
-If you're running Linux and you have CUDA installed, then this should
-work:
-
-```bash
-$ pip install -r step4/requirements-gpu.txt
-```
 
 ---
 
@@ -735,7 +722,7 @@ understand that the search can quickly take a long time.
         'param_grid': {  # 3 * 4 * 4 * 5 folds = 240 fits!
             'net__lr': [0.03, 0.1, 0.3],
             'net__max_epochs': [50, 100, 200, 400],
-            'net__num_units': [5, 10, 20, 40],
+            'net__module__num_units': [5, 10, 20, 40],
         },
 ```
 
@@ -751,7 +738,7 @@ a cluster of computers via [Dask](http://dask.pydata.org):
 # Dask: Application
 
 ```bash
-$ pip install dask distributed
+$ pip install dask distributed==1.23.3
 ```
 
 Open up a new terminal window and start the Dask scheduler:
@@ -876,8 +863,9 @@ as a continuous value between 0 and 10.
 - The `softmax` function is not used in regression: remove it
 - We use the `neg_mean_absolute_error` instead of `accuracy` in `config.py`
 - We make use of `NeuralNetRegressor` instead of `NeuralNetClassifier`
-- We'll replace our `PipelineY` with `sklearn.pipeline.Pipeline`.  The
-  `LabelEncoder` is no longer useful.  (tricky!)
+- We'll replace our `PipelineY` with `sklearn.pipeline.Pipeline`.
+  `LabelEncoder` and `predict_use_inverse` are no longer useful.
+  (tricky!)
 - Let's hack our `DatasetLoader` to return the target (or `y`) vector
   as `float32`: `target = dataset.target.astype('float32')`.
 - For regression problems, Skorch expects a target of shape NxM, where
