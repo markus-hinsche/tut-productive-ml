@@ -98,7 +98,7 @@ def create_pipeline(
         ('to_idx', TextFeaturizer(max_features=vocab_size)),
         ('pad', Padder2d(max_len=max_len, pad_value=vocab_size, dtype=int)),
         ('net', NeuralNetClassifier(
-            RNNClassifier,
+            module=RNNClassifier,
             device=device,
             max_epochs=5,
             lr=0.01,

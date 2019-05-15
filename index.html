@@ -1313,7 +1313,7 @@ And we link the configuration file that we just wrote into a directory
 where Supervisor will pick it up:
 
 ```bash
-$ sudo ln -s ~/dsr-2019/supervisor.conf /etc/supervisor/conf.d/
+$ sudo ln -s /home/ubuntu/dsr-2019/supervisor.conf /etc/supervisor/conf.d/
 ```
 
 Now let's restart Supervisor and check if it's running our process:
@@ -1502,8 +1502,9 @@ before we start up Supervisor again (as root and inside the active
 virtual environment):
 
 ```bash
-$ /etc/init.d/supervisor stop
+$ cd step8
 $ docker-compose down
+$ /etc/init.d/supervisor stop
 $ /etc/init.d/supervisor start
 ```
 
