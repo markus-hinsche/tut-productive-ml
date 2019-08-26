@@ -36,8 +36,8 @@ We'll talk about:
   putting them in production
 
 - Solving common problems in machine learning projects, such as
-  modularization of code, hyperparameter optimization, and distributed
-  learning
+  modularization of code, managing configuration, hyperparameter
+  optimization, and distributed learning
 
 - Making available trained models through scalable and secure web
   services
@@ -184,7 +184,7 @@ configuration.  Here are some examples:
 ```
 
 Also, we frequently have to deal with differing configuration between
-production and development environments
+production and development environments.
 
 ---
 
@@ -317,6 +317,13 @@ implements a [number of these
 algorithms](http://scikit-learn.org/stable/modules/grid_search.html).
 One of these algorithms is called *Grid Search*.
 
+> **Note:** The [scikit-optimize
+package](https://scikit-optimize.github.io/) allows us to search for
+hyperparameters using *Bayesian optimization*.  The Palladium docs
+contain [an example of using
+`skopt.BayesSearchCV`](https://github.com/ottogroup/palladium/blob/master/docs/user/faq.rst#can-i-use-bayesian-optimization-instead-of-grid-search-to-tune-my-hyperparameters)
+instead of `GridSearchCV`, which you're encouraged to try out.
+
 ---
 
 # Grid Search: Application
@@ -414,7 +421,7 @@ You can find this configuration in `step3/palladium-config.py`.
 
 ---
 
-# Palladium: Running the webservice
+# Palladium: Running the web service
 
 ```bash
 $ cd ../step3
@@ -439,7 +446,13 @@ This is the result:
 
 # Palladium: Python API
 
-We want to write a script to produce the following output:
+It's easy using Palladium's configuration and modules outside of the
+`pld-*` scripts and the built-in web service.  For example, you may
+want to implement your own web service, use Palladium from within your
+Jupyter Notebook, or write a custom command-line script that uses it.
+
+Let's take a look at how this works.  We want to write a script that
+uses our Iris model to predict and produce the following output:
 
 ```bash
 $ python predict.py 6.3 2.5 4.9 1.5
@@ -448,7 +461,12 @@ Iris-versicolor: 44.9%
 Iris-virginica: 55.1%
 ```
 
-Here's the implementation in `step3/predict.py`:
+---
+
+# Palladium: Python API (2)
+
+Here's the implementation of the script, which you also find in
+`step3/predict.py`:
 
 ```python
 import sys
@@ -607,7 +625,7 @@ NeuralNetClassifier(
 )
 ```
 
-Class `NeuralNetClassifier` contains the training logic, as well as
+Class `NeuralNetClassifier` contains the training loop, as well as
 methods such as `fit` and `predict`, for compatibility with
 scikit-learn.
 
@@ -719,7 +737,7 @@ understand that the search can quickly take a long time.
 ```
 
 The search for the best hyperparameters is often the most
-computationally intense part of machine learning projects.  For this
+computationally intensive part of machine learning projects.  For this
 reason, scikit-learn supports the parallelization of Grid Search using
 a cluster of computers via [Dask](http://dask.pydata.org):
 
@@ -736,7 +754,7 @@ $ pip install dask distributed==1.23.3
 Open up a new terminal window and start the Dask scheduler:
 
 ```bash
-$ source bin/activate
+$ source bin/activate  # on Windows: scripts/activate.bat
 $ dask-scheduler
 ```
 
@@ -751,7 +769,8 @@ $ export PYTHONPATH=.  # on Windows: set PYTHONPATH=.
 $ dask-worker 127.0.0.1:8786  # IP and port of scheduler
 ```
 
-Finally, we start our Grid Search like this (from inside the environment!):
+Finally, we start our Grid Search like this (again, with our virtual
+environment active):
 
 ```bash
 $ cd step4
@@ -894,8 +913,8 @@ as a continuous value between 0 and 10.
 
 # Skorch: Sentiment analysis with RNNs
 
-Our last example demonstrates the use of RNNs to do sentiment analysis
-on text.  We use the [Large Movie Review
+Our last Skorch example demonstrates the use of RNNs to do sentiment
+analysis on text.  We use the [Large Movie Review
 Dataset](http://ai.stanford.edu/~amaas/data/sentiment/) to train our
 network.
 
@@ -909,13 +928,13 @@ $ cd ../step7
 $ pld-fit --evaluate
 ```
 
-This may take a while if you're doing this on CPU.
+This may take a while if you're doing this on a CPU.
 
 ---
 
 # Sentiment analysis as a service
 
-After the training finished, we can fire up our webservice again:
+After the training finished, we can fire up our web service again:
 
 ```bash
 $ pld-devserver
@@ -946,6 +965,43 @@ $ jupyter notebook
 ```
 
 Look for `RNN_sentiment_classification.ipynb`.
+
+---
+
+# Skorch: Debug network layers with pdb
+
+To get a better intuition of what the individual layers of our neural
+net actually do, we use the [Python
+Debugger](https://docs.python.org/3/library/pdb.html) to step through
+the `RNNClassifier.forward` method in `step7/model.py`.  Place a line
+right after `def forward(self, X)`:
+
+```python
+    def forward(self, X):
+        import pdb; pdb.set_trace()  # this is the new line!
+        embeddings = self.emb(X)
+        # from the recurrent layer, only take the activities from the
+        # ...
+```
+
+And then run `pld-fit` again.  This will drop you into the debugger's
+prompt.  Use the `help` command to find out what [debugger
+commands](https://docs.python.org/3/library/pdb.html#debugger-commands)
+exist:
+
+```
+(Pdb) help
+
+Documented commands (type help <topic>):
+========================================
+EOF    c          d        h         list      q        rv       undisplay
+a      cl         debug    help      ll        quit     s        unt
+alias  clear      disable  ignore    longlist  r        source   until
+args   commands   display  interact  n         restart  step     up
+b      condition  down     j         next      return   tbreak   w
+break  cont       enable   jump      p         retval   u        whatis
+bt     continue   exit     l         pp        run      unalias  where
+```
 
 ---
 
