@@ -129,14 +129,14 @@ the four attributes.
 
 # Palladium: Reading the dataset
 
-You'll find a configuration file in `step1/config.py`.  Therein,
-you'll find the definition of two `dataset_loader`s, which are
-responsible for reading the dataset:
+You'll find a configuration file in `step1/palladium-config.py`.
+Therein, you'll find the definition of two `dataset_loader`s, which
+are responsible for reading the dataset:
 
 ```python
 {
     'dataset_loader_train': {
-        '__factory__': 'palladium.dataset.Table',
+        '__factory__': 'palladium.dataset.CSV,
         'path': 'iris.data',
         'names': [
             'sepal length',
@@ -146,7 +146,6 @@ responsible for reading the dataset:
             'species',
         ],
         'target_column': 'species',
-        'sep': ',',
         'nrows': 100,
     },
 
@@ -267,7 +266,6 @@ option.  On Linux:
 
 ```bash
 $ cd step1
-$ export PALLADIUM_CONFIG=config.py
 $ pld-fit --evaluate
 INFO:palladium:Loading data...
 ...
@@ -276,14 +274,6 @@ INFO:palladium:Train score: 0.9
 INFO:palladium:Test score:  0.82
 ...
 INFO:palladium:Wrote model with version 1.
-```
-
-On Windows:
-
-```shell
-$ cd step1
-$ set PALLADIUM_CONFIG=config.py
-$ pld-fit --evaluate
 ```
 
 Our classifier reaches an accuracy of 90% on the training set and 82%
@@ -331,7 +321,8 @@ One of these algorithms is called *Grid Search*.
 
 # Grid Search: Application
 
-`step2/config.py` contains the parametrization of our Grid Search:
+`step2/palladium-config.py` contains the parametrization of our Grid
+Search:
 
 ```python
     'grid_search': {
@@ -419,7 +410,7 @@ is what we need:
     },
 ```
 
-You can find this configuration in `step3/config.py`.
+You can find this configuration in `step3/palladium-config.py`.
 
 ---
 
@@ -464,7 +455,7 @@ import sys
 from palladium.config import get_config
 
 def predict(features):
-    # Get hold of the Palladium configuration in config.py:
+    # Get hold of the Palladium configuration in palladium-config.py:
     config = get_config()
     # Use the model_persister to load the trained model:
     model = config['model_persister'].read()
@@ -525,8 +516,9 @@ We'll continue working with the Iris dataset.  Instead of a logistic
 regression, we'll use a neural network to do the classification.
 
 You'll find the implementation of the neural network and supporting
-code in `step4/model.py`.  The configuration is in `step4/config.py`.
-Let's take a look at the most important parts.
+code in `step4/model.py`.  The configuration is in
+`step4/palladium-config.py`.  Let's take a look at the most important
+parts.
 
 A large part of our configuration looks exactly the same as in the
 last step, namely `dataset_loader_train`, `dataset_loader_test` and
@@ -663,7 +655,7 @@ learning algorithms.
 
 # Grid Search: Network hyperparameters
 
-In `step4/config.py`:
+In `step4/palladium-config.py`:
 
 ```python
     'grid_search': {
@@ -690,9 +682,9 @@ Which learning rate is the best?
 
 ## Exercise 3:
 
-In `step4/config.py`, look for the comment *YOUR CODE HERE*.  Try to
-find a good combination of learning epochs (`net__max_epochs`) and
-learning rate (`net__lr`).  Can you find a combination that gets a
+In `step4/palladium-config.py`, look for the comment *YOUR CODE HERE*.
+Try to find a good combination of learning epochs (`net__max_epochs`)
+and learning rate (`net__lr`).  Can you find a combination that gets a
 `mean_test_score` of 96% or better?
 
 ---
@@ -763,8 +755,8 @@ Finally, we start our Grid Search like this (from inside the environment!):
 
 ```bash
 $ cd step4
-$ export PALLADIUM_CONFIG=config.py,dask-config.py
-$ # or on Windows: set PALLADIUM_CONFIG=config.py,dask-config.py
+$ export PALLADIUM_CONFIG=palladium-config.py,dask-config.py
+$ # or on Windows: set PALLADIUM_CONFIG=palladium-config.py,dask-config.py
 $ pld-grid-search
 ```
 
@@ -792,8 +784,8 @@ $ pip install -U scikit-learn
 
 # A DatasetLoader for OpenML
 
-The configuration in `step5/config.py` was updated to refer to our new
-class `OpenML`, which reads our dataset from
+The configuration in `step5/palladium-config.py` was updated to refer
+to our new class `OpenML`, which reads our dataset from
 [OpenML.org](https://www.openml.org):
 
 ```python
@@ -832,8 +824,8 @@ number of classes is different.
 Determine the shape of the new feature matrix by adding print
 statements into your `OpenML` implementation.
 
-Try to find out which parameters to set in `step5/confg.py` so that
-the network can be trained:
+Try to find out which parameters to set in `step5/palladium-config.py`
+so that the network can be trained:
 
 ```python
     'model': {
@@ -861,7 +853,8 @@ as a continuous value between 0 and 10.
 - We make a copy of `step5` and call the new directory `step6`
 - Our network needs to have one output instead of ten
 - The `softmax` function is not used in regression: remove it
-- We use the `neg_mean_absolute_error` instead of `accuracy` in `config.py`
+- We use the `neg_mean_absolute_error` instead of `accuracy` in
+  `palladium-config.py`
 - We make use of `NeuralNetRegressor` instead of `NeuralNetClassifier`
 - We'll replace our `PipelineY` with `sklearn.pipeline.Pipeline`.
   `LabelEncoder` and `predict_use_inverse` are no longer useful.
@@ -878,7 +871,7 @@ as a continuous value between 0 and 10.
 
 ## Exercise 6
 
-- Rewrite the `model` entry in `step6/config.py` to use
+- Rewrite the `model` entry in `step6/palladium-config.py` to use
   `sklearn.ensemble.RandomForestRegressor` instead of our
   `create_pipeline` function.
 
@@ -908,8 +901,8 @@ network.
 
 The implementation follows the `rnn_classifier` example within the
 Skorch source tree.  The implementation is already provided for you in
-`step7/config.py` and `step7/model.py`.  Before we dive into how the
-model works, let's train it:
+`step7/palladium-config.py` and `step7/model.py`.  Before we dive into
+how the model works, let's train it:
 
 ```bash
 $ cd ../step7
@@ -1133,7 +1126,6 @@ production environments.  Instead, we'll now install and use
 ```bash
 $ pip install gunicorn
 $ cd step3
-$ export PALLADIUM_CONFIG=config.py
 $ pld-fit
 $ gunicorn palladium.wsgi:app -b 0.0.0.0:8080
 ```
@@ -1231,7 +1223,7 @@ read the persisted model from disk on every request!  This is not
 useful at all.  Thankfully, there's a wrapper called
 `CachedUpdatePersister` that fixes this issue, as it keeps the model
 in memory.  Replace the `model_perister` entry in the
-`step3/config.py` configuration file with the following:
+`step3/palladium-config.py` configuration file with the following:
 
 ```python
     'model_persister': {
@@ -1293,7 +1285,7 @@ On the server, create this supervisor config file and save it as
 command=/home/ubuntu/dsr-2019/bin/gunicorn palladium.wsgi:app -b 0.0.0.0:8080
 directory=/home/ubuntu/dsr-2019/step3/
 user=ubuntu
-environment=PALLADIUM_CONFIG="config.py"
+environment=PALLADIUM_CONFIG="palladium-config.py"
 ```
 
 You can find out more about [Supervisor's configuration files in the

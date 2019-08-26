@@ -1,6 +1,6 @@
 {
     'dataset_loader_train': {
-        '__factory__': 'palladium.dataset.Table',
+        '__factory__': 'palladium.dataset.CSV',
         'path': '../step1/iris.data',
         'names': [
             'sepal length',
@@ -10,7 +10,6 @@
             'species',
         ],
         'target_column': 'species',
-        'sep': ',',
         'nrows': 100,
     },
 

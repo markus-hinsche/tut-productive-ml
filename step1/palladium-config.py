@@ -1,7 +1,7 @@
 {
     'dataset_loader_train': {
-        '__factory__': 'palladium.dataset.Table',
-        'path': '../step1/iris.data',
+        '__factory__': 'palladium.dataset.CSV',
+        'path': 'iris.data',
         'names': [
             'sepal length',
             'sepal width',
@@ -10,7 +10,6 @@
             'species',
         ],
         'target_column': 'species',
-        'sep': ',',
         'nrows': 100,
     },
 
@@ -29,15 +28,4 @@
         '__factory__': 'palladium.persistence.Database',
         'url': 'sqlite:///iris-model.db',
     },
-
-    # NEW ---------------------------------------------------------------------
-    'grid_search': {
-        'param_grid': {
-            'C': [0.1, 1, 10, 100, 1000],
-        },
-        'cv': 8,
-        'verbose': 4,
-        'n_jobs': -1,
-    },
-    # NEW ---------------------------------------------------------------------
 }
