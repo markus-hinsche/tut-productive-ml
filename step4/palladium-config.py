@@ -33,7 +33,7 @@
 
     'grid_search': {
         'param_grid': {
-            'net__lr': [0.03, 0.1, 0.3],
+            'net__estimator__lr': [0.03, 0.1, 0.3],
 
             # YOUR CODE HERE:
             #
@@ -43,7 +43,7 @@
             # settings for max_epochs and see if you can improve the
             # test score.
 
-            'net__max_epochs': [50],
+            'net__estimator__max_epochs': [50],
         },
         'cv': 5,
         'verbose': 4,

@@ -1,6 +1,7 @@
-from dstoolbox.pipeline import PipelineY
 import numpy as np
 from sklearn.base import BaseEstimator
+from sklearn.base import ClassifierMixin
+from sklearn.pipeline import Pipeline
 from sklearn.base import TransformerMixin
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import StandardScaler
@@ -43,23 +44,37 @@ class Cast(BaseEstimator, TransformerMixin):
         return Xt
 
 
+class LabelEncoderClassifier(BaseEstimator, ClassifierMixin):
+    def __init__(self, estimator):
+        self.estimator = estimator
+
+    def fit(self, X, y):
+        self.encoder_ = LabelEncoder().fit(y)
+        y_t = self.encoder_.transform(y)
+        self.estimator.fit(X, y_t)
+        return self
+
+    def predict(self, X):
+        y = self.estimator.predict(X)
+        return self.encoder_.inverse_transform(y)
+
+
 def create_pipeline(
     device='cpu',  # or 'cuda'
     max_epochs=50,
     lr=0.1,
     **kwargs
 ):
-    return PipelineY([
+    return Pipeline([
         ('cast', Cast(np.float32)),
         ('scale', StandardScaler()),
-        ('net', NeuralNetClassifier(
-            MyModule,
-            device=device,
-            max_epochs=max_epochs,
-            lr=lr,
-            train_split=None,
-            **kwargs,
-        ))],
-        y_transformer=LabelEncoder(),
-        predict_use_inverse=True,
-        )
+        ('net', LabelEncoderClassifier(
+            estimator=NeuralNetClassifier(
+                module=MyModule,
+                device=device,
+                max_epochs=max_epochs,
+                lr=lr,
+                train_split=None,
+                **kwargs,
+            ))),
+    ])
