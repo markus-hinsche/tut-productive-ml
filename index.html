@@ -659,9 +659,43 @@ NeuralNetClassifier(
 )
 ```
 
-Class `NeuralNetClassifier` contains the training loop, as well as
-methods such as `fit` and `predict`, for compatibility with
-scikit-learn.
+Class `NeuralNetClassifier` implements a training loop, recording
+metrics, and validation, so you don't have to implement those.
+
+It also implements methods such as `fit` and `predict`, allowing the
+use of PyTorch models in the context of scikit-learn.
+
+---
+
+# Skorch: NeuralNetClassifier and boilerplate
+
+The boilerplate that `NeuralNetClassifier` implements includes a
+PyTorch training loop, which typically looks like this:
+
+```python
+for epoch in range(10):
+    net.train()
+    for inputs, labels in train_loader:
+        optimizer.zero_grad()
+        with torch.set_grad_enabled(True):
+            outputs = net(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+```
+
+Similarly, recording of metrics in PyTorch:
+
+```python
+train_losses = []
+for epoch in range(10):
+    running_loss = 0.0
+    for inputs, label in train_loader:
+        # ...
+        running_loss += loss.item() * inputs.size(0)
+    epoch_loss = running_loss / len(train_loader.dataset)
+    train_losses.append(epoch_loss)
+```
 
 ---
 
@@ -779,7 +813,7 @@ a cluster of computers via [Dask](http://dask.pydata.org):
 
 ---
 
-# Dask: Application
+# Dask: One scheduler, many workers
 
 ```bash
 $ pip install dask distributed
