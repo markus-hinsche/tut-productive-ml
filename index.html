@@ -76,23 +76,57 @@ https://naturalvision.github.io/dsr-2019/
 Palladium emerged from a Otto Group BI project to predict parcel
 delivery times.
 
-These are the requirements that Palladium fulfills for the *Otto Group
-BI*:
-
-- Smooth transition from prototypes to machine learning models in
-  production
-- Avoid boilerplate in ML projects
-- High scalability
-- Avoid license costs
-
 A presentation of Palladium from PyData 2016 is found [here
 (PDF)](./resources/palladium-pydata-lattner.pdf).
 
-We will start by implementing a classifier with Palladium
+## Key features
+
+- Establish common workflow across teams and roles
+- Avoid boilerplate in ML projects
+- Smooth transition from prototypes to production
+- Scalability
+- Avoid license costs
+
+---
+
+# Palladium: Different roles
+
+**Individual Data Scientists**:
+
+- prototype quickly and avoid boilerplate
+- organize code and configuration
+- establish an interface with engineers, deliver API
+
+**Data Science Teams**:
+
+- use a common workflow to access dataset, to model, and evaluate
+- try different algorithms/models on the same problems without hassle
+- try new data with the same algorithm, and compare
+- combine flexible configuration with version control to ensure
+  reproducibility
+
+**Production Engineers**:
+
+- can deploy a Data Scientist's model easily
+- can work on production aspects along well-defined lines, without
+  interfering with work of Data Scientist
+
+---
+
+# Palladium: Similar projects
+
+- [Facebook Hydra](https://cli.dev/): *A framework for elegantly
+  configuring complex applications*
+
+- [MLflow](https://www.mlflow.org/): *An open source platform
+  for managing the end-to-end machine learning lifecycle*
 
 ---
 
 # Iris dataset
+
+What's it like to work with Palladium?  Let's get a sense of that by
+implementing a simple classifier.
 
 In our first example in `step1`, we will make use of the classic
 "Iris" machine learning dataset from 1936.
