@@ -808,21 +808,23 @@ understand that the search can quickly take a long time.
 ```
 
 The search for the best hyperparameters is often the most
-computationally intensive part of machine learning projects.  For this
-reason, scikit-learn supports the parallelization of Grid Search using
-a cluster of computers via [Dask](http://dask.pydata.org):
+computationally intensive part of machine learning projects.  One
+convenient way to distribute the hyperparameter search with
+scikit-learn among a cluster of computers is by using the
+[Dask](http://dask.pydata.org) integration.  From Dask's homepage:
 
-> Dask is a flexible library for parallel computing in Python.
+> *Dask provides advanced parallelism for analytics, enabling
+performance at scale for the tools you love*
 
 ---
 
 # Dask: One scheduler, many workers
 
 ```bash
-$ pip install dask distributed
+$ pip install -U dask distributed bokeh scikit-learn
 ```
 
-Open up a new terminal window and start the Dask scheduler:
+Open up a new terminal window and **start the Dask scheduler**:
 
 ```bash
 $ source bin/activate  # on Windows: scripts/activate.bat
@@ -830,8 +832,8 @@ $ dask-scheduler
 ```
 
 Keep the scheduler running.  Now open another terminal window and
-start a worker.  You may add an arbitrary number of these, on any
-number of computers:
+**start a Dask worker**.  You may start an arbitrary number of these
+workers, on any number of computers:
 
 ```bash
 $ source bin/activate  # on Windows: scripts/activate.bat
@@ -840,15 +842,59 @@ $ export PYTHONPATH=.  # on Windows: set PYTHONPATH=.
 $ dask-worker 127.0.0.1:8786  # IP and port of scheduler
 ```
 
-Finally, we start our Grid Search like this (again, with our virtual
-environment active):
+The Dask scheduler includes a dashboard, which in the *Workers* tab
+lists all the workers that are registered with the scheduler.  The
+default address of the dashboard is http://localhost:8787
+
+---
+
+# Dask: Run the grid search
+
+Finally, we can start our grid search in another new terminal as
+follows; again, activating the virtual environment, and changing into
+the `step4` directory:
 
 ```bash
+$ source bin/activate  # on Windows: scripts/activate.bat
 $ cd step4
 $ export PALLADIUM_CONFIG=palladium-config.py,dask-config.py
 $ # or on Windows: set PALLADIUM_CONFIG=palladium-config.py,dask-config.py
-$ pld-grid-search
+$ pld-grid-search --save-results=grid-search.csv
 ```
+
+The 240 fits take around 130 seconds on my laptop (using a single
+worker).  How long do they take for you?  (Look for the line `Running
+grid search done in...` in the output of `pld-grid-search`.)
+
+Also note that the Dask dashboard includes a *Profile* tab with a
+*flame graph* that shows which parts of the Python code you're running
+use how much CPU time.  [Check it out.](http://localhost:8787/profile)
+
+---
+
+# Dask: ✍️ Exercise: Set up a cluster
+
+Get together in groups of two or three.  Decide which one of you runs
+the central scheduler, start it, and remember its network address.
+Make sure you are in the same network (LAN) as the others in your
+group.  Now start up a worker on each one of your computers and
+connect it to the scheduler.  Use the dashboard to verify that all
+Dask workers are indeed connected.
+
+The one in your group running the scheduler can now run the
+`pld-grid-search` command as before, and you should see it distribute
+the work among all the workers.
+
+> ⚠️ **Note:** Again, make sure that you start the worker like before,
+in the right directory, with the environment active, and with
+`PYTHONPATH` set.  `pld-grid-search` also needs to be run like before,
+with correct `PALLADIUM_CONFIG` and venv.  Lastly, make sure you point
+the workers to the right network address using the command-line
+argument.
+
+How much faster can you make the grid search go using your cluster?
+(And what about those `--nthreads` and `--nprocs` command line options
+for `dask-worker`?)
 
 ---
 
