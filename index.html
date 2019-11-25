@@ -286,9 +286,9 @@ $ conda install ujson
 $ pip install -r step1/requirements.txt
 ```
 
-> **Note:** For this tutorial, it's not recommended to use Conda.  Use
-it if you know what you're doing, but be aware that some things will
-work differently for you going forward.
+> ⚠️ **Note:** For this tutorial, it's not recommended to use Conda.
+Use it if you know what you're doing, but be aware that some things
+will work differently for you going forward.
 
 ---
 
@@ -332,14 +332,14 @@ docs](http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Logi
 float. Like in support vector machines, smaller values specify
 stronger regularization.
 
-## Exercise 1:
+## ✍️ Exercise
 
 Can we find a better C parameter such that our score on the test set
 improves?
 
 ---
 
-# Grid Search
+# Grid search
 
 The search for optimal hyperparameters is a very common task in
 machine learning.  In our example, doing the search by hand was still
@@ -349,9 +349,9 @@ these parameters.
 There's different options to perform the search, scikit-learn itself
 implements a [number of these
 algorithms](http://scikit-learn.org/stable/modules/grid_search.html).
-One of these algorithms is called *Grid Search*.
+One of these algorithms is called *grid search*.
 
-> **Note:** The [scikit-optimize
+> ⚠️ **Note:** The [scikit-optimize
 package](https://scikit-optimize.github.io/) allows us to search for
 hyperparameters using *Bayesian optimization*.  The Palladium docs
 contain [an example of using
@@ -360,10 +360,10 @@ instead of `GridSearchCV`, which you're encouraged to try out.
 
 ---
 
-# Grid Search: Application
+# Grid search: Application
 
-`step2/palladium-config.py` contains the parametrization of our Grid
-Search:
+`step2/palladium-config.py` contains the parametrization of our grid
+search:
 
 ```python
     'grid_search': {
@@ -385,7 +385,7 @@ $ pld-grid-search
 
 ---
 
-# Grid Search: Interpreting the output
+# Grid search: Interpreting the output
 
 ```
    mean_fit_time  mean_score_time  mean_test_score  mean_train_score param_C
@@ -404,7 +404,7 @@ score.
 
 ---
 
-# Grid Search and cross validation
+# Grid search and cross validation
 
 We set the `cv` parameter in our grid search configuration to 8, which
 means we want to use 8-fold cross validation.  Let's take a look again
@@ -530,11 +530,14 @@ library for neural networks.  It's based on [PyTorch](https://pytorch.org).
 ## Installation
 
 ```bash
-$ pip install -r step4/requirements-base.txt
+$ pip install -r step4/requirements-base.txt  # install skorch and dstoolbox
 ```
 
-Look for the way to install PyTorch on your system using pip on
-http://pytorch.org
+Use the [installation matrix on the PyTorch
+website](https://pytorch.org/get-started/locally/) to find out how to
+install PyTorch on your computer:
+
+![:scale 80%](./resources/pytorch-start-locally.png)
 
 ---
 
@@ -739,7 +742,7 @@ learning algorithms.
 
 ---
 
-# Grid Search: Network hyperparameters
+# Grid search: Network hyperparameters
 
 In `step4/palladium-config.py`:
 
@@ -758,15 +761,15 @@ In `step4/palladium-config.py`:
 $ pld-grid-search
 ```
 
-## Exercise 2:
+## ✍️ Exercise
 
 Which learning rate is the best?
 
 ---
 
-# Grid Search: Network hyperparameters (2)
+# Grid search: Network hyperparameters (2)
 
-## Exercise 3:
+## ✍️ Exercise
 
 In `step4/palladium-config.py`, look for the comment *YOUR CODE HERE*.
 Try to find a good combination of learning epochs (`net__max_epochs`)
@@ -789,7 +792,7 @@ and learning rate (`net__lr`).  Can you find a combination that gets a
 
 ---
 
-# Grid Search: Parallelization with Dask
+# Grid search: Parallelization with Dask
 
 If we now consider adding more hyperparameters to the search, such as
 the number of neurons in our network's *hidden layer*, we'll
@@ -849,30 +852,28 @@ $ pld-grid-search
 
 ---
 
-# Determine wine quality with Skorch
+# Determine wine quality with skorch
 
 Let's try the same neural net on a different dataset.  We'll use the
 [Wine Quality Data Set](https://www.openml.org/d/40691) to learn a
 model to predict the quality of wine based on a score between 0
 (awful) and 10 (fantastic).
 
-`step5` contains a copy of `step4`. First, we will have to implement a
-Palladium `DatasetLoader` to read the dataset.  We will then try to
-use the network from our last example to do the classification.
+Folder `step5` contains a copy of `step4`. First, we will have to
+implement a Palladium `DatasetLoader` to read the dataset.  We will
+then adapt the neural network from our last example to do the
+classification.
 
 Note that when you are finished implementing the DatasetLoader, you'll
-see an error trying to fit the neural network.
-
-```bash
-$ pip install -U scikit-learn
-```
+see an error trying to fit the neural network because of a dimension
+mismatch.
 
 ---
 
 # A DatasetLoader for OpenML
 
 The configuration in `step5/palladium-config.py` was updated to refer
-to our new class `OpenML`, which reads our dataset from
+to a new class `OpenML`, which will read the dataset from
 [OpenML.org](https://www.openml.org):
 
 ```python
@@ -882,7 +883,7 @@ to our new class `OpenML`, which reads our dataset from
     },
 ```
 
-## Exercise 4
+## ✍️ Exercise
 
 Complete the implementation of the `OpenML` class in
 `step5/dataset.py`.  The source file has important hints for you.
@@ -902,7 +903,7 @@ class OpenML:
 
 # MyModule: Input and output parameters
 
-## Exercise 4 (continued)
+## ✍️ Exercise (continued)
 
 The feature matrix of our new dataset has a shape (dimensionality)
 that is different to the shape of our Iris feature matrix.  Also, the
@@ -922,7 +923,7 @@ so that the network can be trained:
 ```
 
 As soon as you are able to train the network (use `pld-fit`), take a
-look at the Grid Search parameters inside the configuration file.  Can
+look at the grid search parameters inside the configuration file.  Can
 you find a configuration of hyperparameters with which you can reach
 an accuracy of 55% or more on the `mean_test_score`?
 
@@ -935,7 +936,7 @@ problem.  That is, instead of predicting probabilities for the 10 or
 so classes, we will try to predict a single number: the actual score
 as a continuous value between 0 and 10.
 
-## Exercise 5
+## ✍️ Exercise
 
 - We make a copy of `step5` and call the new directory `step6`
 - Our network needs to have one output instead of ten
@@ -948,7 +949,7 @@ as a continuous value between 0 and 10.
   (tricky!)
 - Let's hack our `DatasetLoader` to return the target (or `y`) vector
   as `float32`: `target = dataset.target.astype('float32')`.
-- For regression problems, Skorch expects a target of shape NxM, where
+- For regression problems, skorch expects a target of shape NxM, where
   each sample can have multiple regression targets: `target =
   target.reshape(-1, 1)`.
 
@@ -956,7 +957,7 @@ as a continuous value between 0 and 10.
 
 # Random Forest instead of neural network
 
-## Exercise 6
+## ✍️ Exercise
 
 - Rewrite the `model` entry in `step6/palladium-config.py` to use
   `sklearn.ensemble.RandomForestRegressor` instead of our
@@ -974,20 +975,20 @@ as a continuous value between 0 and 10.
 - Read through the most important parameters of class
   [`RandomForestregressor` in the scikit-learn
   documentation](http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html).
-  Use a few parameters to run a Grid Search.  What's the best
+  Use a few parameters to run a grid search.  What's the best
   `mean_test_score` can you can get?
 
 ---
 
 # Skorch: Sentiment analysis with RNNs
 
-Our last Skorch example demonstrates the use of RNNs to do sentiment
+Our last skorch example demonstrates the use of RNNs to do sentiment
 analysis on text.  We use the [Large Movie Review
 Dataset](http://ai.stanford.edu/~amaas/data/sentiment/) to train our
 network.
 
 The implementation follows the `rnn_classifier` example within the
-Skorch source tree.  The implementation is already provided for you in
+skorch source tree.  The implementation is already provided for you in
 `step7/palladium-config.py` and `step7/model.py`.  Before we dive into
 how the model works, let's train it:
 
