@@ -37,7 +37,7 @@ We'll talk about:
 
 - Solving common problems in machine learning projects, such as
   modularization of code, managing configuration, hyperparameter
-  optimization, and distributed learning
+  optimization, and distributed learning, and working with big data
 
 - Making available trained models through scalable and secure web
   services
@@ -68,6 +68,8 @@ https://naturalvision.github.io/dsr-2019/
   * Open Source (since 2003)
   * Deep Learning (since 2014)
   * Software development best practices (testing, pairing, tutorials)
+
+---
 
 ---
 
@@ -522,6 +524,8 @@ if __name__ == '__main__':
 
 ---
 
+---
+
 # Skorch
 
 [Skorch](https://skorch.readthedocs.io/) is a scikit-learn compatible
@@ -813,6 +817,8 @@ NeuralNetClassifier(
 
 ---
 
+---
+
 # Grid search: Parallelization with Dask
 
 If we now consider adding more hyperparameters to the search, such as
@@ -971,6 +977,8 @@ results for the means.  Why is that?
 
 ---
 
+---
+
 # Determine wine quality with skorch
 
 Let's now go back to the Iris neural net classifier that we developed
@@ -1101,6 +1109,8 @@ as a continuous value between 0 and 10.
 
 ---
 
+---
+
 # Skorch: Sentiment analysis with RNNs
 
 Our last skorch example demonstrates the use of RNNs to do sentiment
@@ -1195,7 +1205,9 @@ bt     continue   exit     l         pp        run      unalias  where
 
 ---
 
-# Deploying our model to production
+---
+
+# Deploying models to production
 
 We've seen how `pld-devserver` works for running a web service
 locally, but how do we go about making available our model on an
@@ -1264,7 +1276,8 @@ when we access our web service through these ports.
 # SSH into your EC2 instance
 
 Your EC2 instance has a public IPv4 address.  In this example it's
-35.157.232.182:
+35.157.232.182.  Make sure you use your own IP address and not mine in
+the following examples:
 
 ![:scale 100%](./resources/ec2-instances.png)
 
@@ -1389,6 +1402,8 @@ want to run our application as root.  What can we do?  We can use
 ```bash
 $ sudo iptables -A PREROUTING -t nat -p tcp --dport 80 -j REDIRECT --to-ports 8080
 ```
+
+---
 
 ---
 
@@ -1780,14 +1795,14 @@ service.  Add this piece of configuration to
 
 - https://github.com/ottogroup/palladium
 - https://github.com/scikit-learn/scikit-learn
-- https://github.com/dnouri/skorch
+- https://github.com/skorch-dev/skorch
+- https://github.com/dask/dask
 
 
 - daniel@naturalvision.de
-- [twitter.com/dnouri](https://twitter.com/dnouri)
-- [danielnouri.org](http://danielnouri.org)
-- [naturalvision.de](http://naturalvision.de)
 - [linkedin.com/in/nouri](https://www.linkedin.com/in/nouri)
+- [twitter.com/dnouri](https://twitter.com/dnouri)
+- [naturalvision.de](http://naturalvision.de)
 
 ## Images
 
