@@ -53,7 +53,7 @@ def create_pipeline(
         ('cast', Cast(np.float32)),
         ('scale', StandardScaler()),
         ('net', NeuralNetClassifier(
-            MyModule,
+            module=MyModule,
             device=device,
             max_epochs=max_epochs,
             lr=lr,

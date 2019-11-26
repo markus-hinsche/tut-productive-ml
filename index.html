@@ -653,7 +653,7 @@ expected.**
 from skorch import NeuralNetClassifier
 
 NeuralNetClassifier(
-    MyModule,
+    module=MyModule,
     device='cpu',
     max_epochs=50,
     lr=0.1,
@@ -778,17 +778,38 @@ and learning rate (`net__lr`).  Can you find a combination that gets a
 
 ---
 
-# Skorch: LRScheduler and EarlyStopping
+# Skorch: EarlyStopping and LRScheduler
+
+- The
+  [skorch.callbacks.EarlyStopping](https://skorch.readthedocs.io/en/latest/callbacks.html#skorch.callbacks.EarlyStopping)
+  callback allows the stopping of training if further training leads
+  to no more improvements.
 
 - The
   [skorch.callbacks.LRScheduler](https://skorch.readthedocs.io/en/latest/callbacks.html#skorch.callbacks.LRScheduler)
   allows us to adapt the learning rate during training, based on
   arbitrary conditions.
 
-- The
-  [skorch.callbacks.EarlyStopping](https://skorch.readthedocs.io/en/latest/callbacks.html#skorch.callbacks.EarlyStopping)
-  callback allows the stopping of training if further training leads
-  to no more improvements.
+- We can use any learning rate scheduler policy implemented in
+  [torch.optim.lr_scheduler](https://pytorch.org/docs/stable/optim.html),
+  such as
+  [CyclicLR](https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.CyclicLR).
+
+Usage example:
+
+```python
+from skorch.callbacks import EarlyStopping, LRScheduler
+from torch.optim.lr_scheduler import CyclicLR
+
+NeuralNetClassifier(
+    module=MyModule,
+    # ...
+    callbacks=[
+        ('early_stopping', EarlyStopping(patience=10)),
+        ('lr_scheduler', LRScheduler(policy=CyclicLR(base_lr=0.001, max_lr=0.1))),
+    ],
+)
+```
 
 ---
 
@@ -900,15 +921,17 @@ for `dask-worker`?)
 
 # Determine wine quality with skorch
 
-Let's try the same neural net on a different dataset.  We'll use the
-[Wine Quality Data Set](https://www.openml.org/d/40691) to learn a
-model to predict the quality of wine based on a score between 0
-(awful) and 10 (fantastic).
+Let's now go back to the Iris neural net classifier that we developed
+previously and apply it to a different dataset.
+
+We'll use the [Wine Quality Data Set](https://www.openml.org/d/40691)
+with the goal to model wine quality based on physicochemical tests
+[[Cortez et al., 2009]](http://www3.dsi.uminho.pt/pcortez/wine/).
 
 Folder `step5` contains a copy of `step4`. First, we will have to
-implement a Palladium `DatasetLoader` to read the dataset.  We will
-then adapt the neural network from our last example to do the
-classification.
+implement a Palladium `DatasetLoader` to read the dataset from
+[OpenML.org](https://www.openml.org/).  We will then adapt the neural
+network from our last example to do the classification.
 
 Note that when you are finished implementing the DatasetLoader, you'll
 see an error trying to fit the neural network because of a dimension
