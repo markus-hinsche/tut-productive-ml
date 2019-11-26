@@ -914,8 +914,60 @@ the workers to the right network address using the command-line
 argument.
 
 How much faster can you make the grid search go using your cluster?
-(And what about those `--nthreads` and `--nprocs` command line options
-for `dask-worker`?)
+
+By the way: The Dask docs have guides on [how to set up Dask
+clusters](https://docs.dask.org/en/latest/setup.html) in different
+environments, such as with YARN, Kubernetes, and more.
+
+---
+
+# Dask dataframes for analyzing big data
+
+Dask dataframes are useful when the dataset you want to analyze is
+larger than your machine's RAM.
+
+```bash
+$ pip install dask[dataframe]
+```
+
+In our example script in `step4/dd.py`, we create a number of CSV
+files with random values (in `create_csvs`).  These are relatively
+small files and they'll fit in your RAM (they're about 30MB when
+loaded).
+
+We then compare the use of pandas to compute the means of each column
+(in `compute_mean_pandas`) with the use of Dask dataframes to do the
+same (in `compute_mean_dask`).
+
+You can run the script and compare the times it takes for each method:
+
+```bash
+$ python dd.py
+```
+
+---
+
+# Dask dataframes for analyzing big data (2)
+
+When you ran the script, Dask defaulted to the [Single-Machine
+Scheduler](https://docs.dask.org/en/latest/setup/single-machine.html)
+to perform the computation.  That is, it wasn't using the distributed
+`dask-scheduler` and workers that we set up previously.
+
+The Single-Machine Scheduler is still useful in that it allows the use
+of local threads or processes to split up the work, and it allows us
+to work on data that is larger than memory.
+
+## ✍️ Exercise
+
+Go back to your group from the previous exercise and run the `dd.py`
+example script such that it uses your group's distributed cluster.
+
+To use your cluster's central scheduler, you must modify the line in
+`dd.py` that says "*# use distributed scheduler*."
+
+Running the example repeatedly across computers may yield different
+results for the means.  Why is that?
 
 ---
 
