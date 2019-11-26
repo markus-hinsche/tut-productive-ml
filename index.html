@@ -1650,13 +1650,11 @@ find the definition of domains.  Change this to match the subdomain
 that you just set up:
 
 ```bash
-#domains=(mysubdomain.deeplearningretreat.com)
-domains=(dsr2019test.naturalvision.de)
+domains=(mysubdomain.naturalvision.de)
 ```
 
-Similarly, replace all occurrences of
-`mysubdomain.deeplearningretreat.com` with your domain name inside of
-`step8/data/nginx/app.conf`.
+Similarly, replace all occurrences of `mysubdomain.naturalvision.de`
+with your actual domain name inside of `step8/data/nginx/app.conf`.
 
 Remember the `iptables` rule that we used to forward ports?  We need
 to get rid of it, because we'll have NGINX serve port 80:
@@ -1689,9 +1687,9 @@ If successful, this will print something like this:
 
 ```
  - Congratulations! Your certificate and chain have been saved at:
-   /etc/letsencrypt/live/dsr2019test.naturalvision.de/fullchain.pem
+   /etc/letsencrypt/live/mysubdomain.naturalvision.de/fullchain.pem
    Your key file has been saved at:
-   /etc/letsencrypt/live/dsr2019test.naturalvision.de/privkey.pem
+   /etc/letsencrypt/live/mysubdomain.naturalvision.de/privkey.pem
    Your cert will expire on 2019-05-20. To obtain a new or tweaked
    version of this certificate in the future, simply run certbot
    again. To non-interactively renew *all* of your certificates, run
@@ -1707,9 +1705,9 @@ If successful, this will print something like this:
 
 # It just works, but how?
 
-Open up this page in your browser.  Your browser will confirm that
-your connection is now secure:
-https://dsr2019test.naturalvision.de/predict?sepal%20length=6.3&sepal%20width=2.5&petal%20length=4.9&petal%20width=1.5
+When open the following page in your browser (use your own
+subdomain!), note that your browser will show a secure connection now:
+https://mysubdomain.naturalvision.de/predict?sepal%20length=6.3&sepal%20width=2.5&petal%20length=4.9&petal%20width=1.5
 
 Let's have a look at the individual components and pieces of
 configuration that made this work.
