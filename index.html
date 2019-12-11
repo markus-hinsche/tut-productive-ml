@@ -49,12 +49,12 @@ We'll talk about:
 Download this repository to be able to run code examples:
 
 ```bash
-$ git clone https://github.com/naturalvision/dsr-2019.git
+$ git clone https://github.com/naturalvision/tut-productive-ml.git
 ```
 
 Slides are online at:
 
-https://naturalvision.github.io/dsr-2019/
+https://naturalvision.github.io/tut-productive-ml/
 
 ---
 
@@ -172,7 +172,7 @@ are responsible for reading the dataset:
 ```python
 {
     'dataset_loader_train': {
-        '__factory__': 'palladium.dataset.CSV,
+        '__factory__': 'palladium.dataset.CSV',
         'path': 'iris.data',
         'names': [
             'sepal length',
@@ -526,18 +526,18 @@ if __name__ == '__main__':
 
 ---
 
-# Skorch
+# Skorch: Installation
 
 [Skorch](https://skorch.readthedocs.io/) is a scikit-learn compatible
 library for neural networks.  It's based on [PyTorch](https://pytorch.org).
 
-## Installation
+First install skorch and dstoolbox:
 
 ```bash
 $ pip install -r step4/requirements-base.txt  # install skorch and dstoolbox
 ```
 
-Use the [installation matrix on the PyTorch
+Then, use the [installation matrix on the PyTorch
 website](https://pytorch.org/get-started/locally/) to find out how to
 install PyTorch on your computer:
 
@@ -810,7 +810,7 @@ NeuralNetClassifier(
     # ...
     callbacks=[
         ('early_stopping', EarlyStopping(patience=10)),
-        ('lr_scheduler', LRScheduler(policy=CyclicLR(base_lr=0.001, max_lr=0.1))),
+        ('lr_scheduler', LRScheduler(policy=CyclicLR, base_lr=0.001, max_lr=0.1)),
     ],
 )
 ```
@@ -1349,17 +1349,17 @@ Next, we'll check out this repo from Github and create a virtualenv
 inside of it:
 
 ```bash
-$ git clone https://github.com/naturalvision/dsr-2019.git
+$ git clone https://github.com/naturalvision/tut-productive-ml.git
 ...
-$ python3 -m venv dsr-2019
-$ cd dsr-2019
+$ python3 -m venv tut-productive-ml
+$ cd tut-productive-ml
 $ source bin/activate
 ```
 
 The last command will change our prompt to look something like this:
 
 ```
-(dsr-2019) ubuntu@ip-172-31-42-9:~/dsr-2019$
+(tut-productive-ml) ubuntu@ip-172-31-42-9:~/tut-productive-ml$
 ```
 
 We can now proceed to install Python dependencies:
@@ -1435,7 +1435,9 @@ To see where time is being spent on each request, let's install the
 [py-spy Python profiler](https://github.com/benfred/py-spy):
 
 ```bash
-$ pip install py-spy  # do this from within your virtualenv!
+$ cd tut-productive-ml
+$ source bin/activate
+$ pip install py-spy
 ```
 
 We keep the Gunicorn process running in another window.  Note that
@@ -1452,7 +1454,7 @@ it's doing:
 ```bash
 $ sudo su
 $ source bin/activate
-$ py-spy --pid 5883  # replace with the actual Gunicorn PID you just saw
+$ py-spy top --pid 5883  # replace with the actual Gunicorn PID you just saw
 ```
 
 ---
@@ -1539,12 +1541,12 @@ Use `Ctrl+C` to shut down the `gunicorn` process (or alternatively,
 close the terminal window in which you're running it).
 
 On the server, create this supervisor config file and save it as
-`/home/ubuntu/dsr-2019/supervisor.conf`:
+`/home/ubuntu/tut-productive-ml/supervisor.conf`:
 
 ```ini
 [program:webservice]
-command=/home/ubuntu/dsr-2019/bin/gunicorn palladium.wsgi:app -b 0.0.0.0:8080
-directory=/home/ubuntu/dsr-2019/step3/
+command=/home/ubuntu/tut-productive-ml/bin/gunicorn palladium.wsgi:app -b 0.0.0.0:8080
+directory=/home/ubuntu/tut-productive-ml/step3/
 user=ubuntu
 environment=PALLADIUM_CONFIG="palladium-config.py"
 ```
@@ -1566,7 +1568,7 @@ And we link the configuration file that we just wrote into a directory
 where Supervisor will pick it up:
 
 ```bash
-$ sudo ln -s /home/ubuntu/dsr-2019/supervisor.conf /etc/supervisor/conf.d/
+$ sudo ln -s /home/ubuntu/tut-productive-ml/supervisor.conf /etc/supervisor/conf.d/
 ```
 
 Now let's restart Supervisor and check if it's running our process:
@@ -1618,6 +1620,7 @@ To install `docker-compose`, make sure you're inside your virtual
 environment and run this:
 
 ```bash
+$ source bin/activate
 $ pip install docker-compose
 ```
 
@@ -1736,8 +1739,8 @@ Take a look at `step8/supervisor.conf`.  In addition to our
 
 ```ini
 [program:docker-compose]
-command=/home/ubuntu/dsr-2019/bin/docker-compose up
-directory=/home/ubuntu/dsr-2019/step8/
+command=/home/ubuntu/tut-productive-ml/bin/docker-compose up
+directory=/home/ubuntu/tut-productive-ml/step8/
 ```
 
 Let's link this file into the right place such that Supervisor picks
@@ -1745,7 +1748,7 @@ it up:
 
 ```bash
 $ sudo rm /etc/supervisor/conf.d/supervisor.conf
-$ sudo ln -s ~/dsr-2019/step8/supervisor.conf /etc/supervisor/conf.d/
+$ sudo ln -s ~/tut-productive-ml/step8/supervisor.conf /etc/supervisor/conf.d/
 ```
 
 We shut down the running instance of Supervisor and `docker-compose`
@@ -1785,6 +1788,32 @@ service.  Add this piece of configuration to
     'alive_decorators': [
         'mybasicauth.requires_auth',
     ],
+```
+
+---
+
+# Programmatic use of the web service
+
+Our prediction web service will typically be called from another
+program, be it a smartphone app or a website.  This is how you would
+use the final web service from Python:
+
+```python
+import requests
+
+data = [
+    {'sepal length': 6.3, 'sepal width': 2.5,
+     'petal length': 4.9, 'petal width': 1.5},
+    ]
+result = requests.get(
+    'https://mysubdomain.naturalvision.de/predict',
+    json=data,
+    auth=('myuser', 'mysecret'),
+    ).json()
+
+print(result)
+# result is a Python dictionary:
+# {'metadata': {'status': 'OK', 'error_code': 0}, 'result': ['Iris-virginica']}
 ```
 
 ---
