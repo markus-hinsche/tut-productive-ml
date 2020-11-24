@@ -1373,7 +1373,7 @@ Next, we'll check out this repo from Github and create a virtualenv
 inside of it:
 
 ```bash
-$ git clone https://github.com/naturalvision/tut-productive-ml.git
+$ git clone https://github.com/markus-hinsche/tut-productive-ml.git
 ...
 $ python3 -m venv tut-productive-ml
 $ cd tut-productive-ml
@@ -1467,7 +1467,7 @@ Gunicorn prints out the process id (PID) of its worker when it starts
 up.  It looks something like this:
 
 ```
-[2019-02-18 16:12:05 +0000] [5883] [INFO] Booting worker with pid: 5883
+[2020-11-18 16:12:05 +0000] [5883] [INFO] Booting worker with pid: 5883
 ```
 
 We can now use `py-spy` to attach to the Gunicorn worker and see what
@@ -1658,13 +1658,13 @@ with
 Namecheap](https://www.namecheap.com/support/knowledgebase/article.aspx/9776/2237/how-to-create-a-subdomain-for-my-domain/).
 
 Here's the *A Record* that I set up such that
-`dsr2019test.naturalvision.de` now points to the IP of my EC2
+`dsr2020test.markushinsche.de` now points to the IP of my EC2
 instance, which is `35.157.232.182`:
 
 ![:scale 100%](./resources/dns-namecheap.png)
 
 After this, we should be able to access our web service using the new
-name: http://dsr2019test.naturalvision.de/alive
+name: http://dsr2020test.markushinsche.de/alive
 
 ---
 
@@ -1675,10 +1675,10 @@ find the definition of domains.  Change this to match the subdomain
 that you just set up:
 
 ```bash
-domains=(mysubdomain.naturalvision.de)
+domains=(mysubdomain.markushinsche.de)
 ```
 
-Similarly, replace all occurrences of `mysubdomain.naturalvision.de`
+Similarly, replace all occurrences of `mysubdomain.markushinsche.de`
 with your actual domain name inside of `step8/data/nginx/app.conf`.
 
 Remember the `iptables` rule that we used to forward ports?  We need
@@ -1712,10 +1712,10 @@ If successful, this will print something like this:
 
 ```
  - Congratulations! Your certificate and chain have been saved at:
-   /etc/letsencrypt/live/mysubdomain.naturalvision.de/fullchain.pem
+   /etc/letsencrypt/live/mysubdomain.markushinsche.de/fullchain.pem
    Your key file has been saved at:
-   /etc/letsencrypt/live/mysubdomain.naturalvision.de/privkey.pem
-   Your cert will expire on 2019-05-20. To obtain a new or tweaked
+   /etc/letsencrypt/live/mysubdomain.markushinsche.de/privkey.pem
+   Your cert will expire on 2021-05-20. To obtain a new or tweaked
    version of this certificate in the future, simply run certbot
    again. To non-interactively renew *all* of your certificates, run
    "certbot renew"
@@ -1732,7 +1732,7 @@ If successful, this will print something like this:
 
 When open the following page in your browser (use your own
 subdomain!), note that your browser will show a secure connection now:
-https://mysubdomain.naturalvision.de/predict?sepal%20length=6.3&sepal%20width=2.5&petal%20length=4.9&petal%20width=1.5
+https://mysubdomain.markushinsche.de/predict?sepal%20length=6.3&sepal%20width=2.5&petal%20length=4.9&petal%20width=1.5
 
 Let's have a look at the individual components and pieces of
 configuration that made this work.
@@ -1828,7 +1828,7 @@ data = [
      'petal length': 4.9, 'petal width': 1.5},
     ]
 result = requests.get(
-    'https://mysubdomain.naturalvision.de/predict',
+    'https://mysubdomain.markushinsche.de/predict',
     json=data,
     auth=('myuser', 'mysecret'),
     ).json()
@@ -1848,10 +1848,10 @@ print(result)
 - https://github.com/dask/dask
 
 
-- daniel@naturalvision.de
-- [linkedin.com/in/nouri](https://www.linkedin.com/in/nouri)
-- [twitter.com/dnouri](https://twitter.com/dnouri)
-- [naturalvision.de](http://naturalvision.de)
+- mail@markushinsche.de
+- [linkedin.com/in/markushinsche](https://linkedin.com/in/markushinsche)
+- [twitter.com/markus_hinsche](https://twitter.com/markus_hinsche)
+- [markushinsche.de](https://markushinsche.de)
 
 ## Images
 
