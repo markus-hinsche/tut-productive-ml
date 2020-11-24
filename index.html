@@ -24,7 +24,7 @@ class: center, middle
 
 # Productive machine learning in Python
 
-Daniel Nouri, Natural Vision UG, datascienceretreat.com 2019
+Markus Hinsche, Senior ML Engineer, Freelance, datascienceretreat.com 2020
 
 ---
 
@@ -49,27 +49,25 @@ We'll talk about:
 Download this repository to be able to run code examples:
 
 ```bash
-$ git clone https://github.com/naturalvision/tut-productive-ml.git
+$ git clone https://github.com/markus-hinsche/tut-productive-ml.git
 ```
 
 Slides are online at:
 
-https://naturalvision.github.io/tut-productive-ml/
+https://markus-hinsche.github.io/tut-productive-ml/
 
 ---
 
 # whoami
 
-- Machine Learning Consultant ([Natural Vision](http://naturalvision.de))
-  * Development and training (Python and Machine Learning)
-- Clients: Otto Group, IKEA, Luxottica, Toptal
+- Machine Learning Freelancer ([website](http://markushinsche.de), [github](https://github.com/markus-hinsche/))
+  * Hands-on Implementation and Consoluting (Machine Learning)
+- Projects: Welthungerhilfe (computer vision), The Martec (NLP), ...
 - Strengths:
-  * Python (since 2000)
-  * Open Source (since 2003)
-  * Deep Learning (since 2014)
-  * Software development best practices (testing, pairing, tutorials)
-
----
+  * Python (since 2009)
+  * Deep Learning (since 2018)
+  * Software development best practices (testing, pairing, clean code)
+  * Mentoring
 
 ---
 
@@ -524,8 +522,6 @@ if __name__ == '__main__':
 
 ---
 
----
-
 # Skorch: Installation
 
 [Skorch](https://skorch.readthedocs.io/) is a scikit-learn compatible
@@ -817,8 +813,6 @@ NeuralNetClassifier(
 
 ---
 
----
-
 # Grid search: Parallelization with Dask
 
 If we now consider adding more hyperparameters to the search, such as
@@ -977,8 +971,6 @@ results for the means.  Why is that?
 
 ---
 
----
-
 # Determine wine quality with skorch
 
 Let's now go back to the Iris neural net classifier that we developed
@@ -1109,8 +1101,6 @@ as a continuous value between 0 and 10.
 
 ---
 
----
-
 # Skorch: Sentiment analysis with RNNs
 
 Our last skorch example demonstrates the use of RNNs to do sentiment
@@ -1202,8 +1192,6 @@ b      condition  down     j         next      return   tbreak   w
 break  cont       enable   jump      p         retval   u        whatis
 bt     continue   exit     l         pp        run      unalias  where
 ```
-
----
 
 ---
 
@@ -1402,8 +1390,6 @@ want to run our application as root.  What can we do?  We can use
 ```bash
 $ sudo iptables -A PREROUTING -t nat -p tcp --dport 80 -j REDIRECT --to-ports 8080
 ```
-
----
 
 ---
 
