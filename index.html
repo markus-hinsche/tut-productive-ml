@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Productive machine learning in Python with Palladium and scikit-learn</title>
+    <title>Practical Aspects of Machine Learning</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <style type="text/css">
       @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
@@ -22,9 +22,9 @@
 
 class: center, middle
 
-# Productive machine learning in Python
+# Practical Aspects of Machine Learning
 
-Markus Hinsche, Senior ML Engineer, Freelance, datascienceretreat.com 2020
+Markus Hinsche, Senior ML Engineer, Freelance, datascienceretreat.com 2021
 
 ---
 
@@ -32,7 +32,7 @@ Markus Hinsche, Senior ML Engineer, Freelance, datascienceretreat.com 2020
 
 We'll talk about:
 
-- A seamless workflow for developing machine learning models and
+- A workflow for developing machine learning models and
   putting them in production
 
 - Solving common problems in machine learning projects, such as
@@ -41,6 +41,16 @@ We'll talk about:
 
 - Making available trained models through scalable and secure web
   services
+
+Topics we can discuss:
+mixed-precision,
+multi-gpu training,
+TPU training,
+scale up model training,
+model ensembling,
+hyperparameter tuning, search space
+
+Tools/Programs: ls, git, ssh, scp, vim, PDB, docker, docker-compose, Postman/Insomnia
 
 ---
 
@@ -54,7 +64,7 @@ $ git clone https://github.com/markus-hinsche/tut-productive-ml.git
 
 Slides are online at:
 
-https://markus-hinsche.github.io/tut-productive-ml/
+https://markus-hinsche.github.io/tut-practical-aspects-of-ml/
 
 ---
 
@@ -62,7 +72,7 @@ https://markus-hinsche.github.io/tut-productive-ml/
 
 - Machine Learning Freelancer ([website](http://markushinsche.de), [github](https://github.com/markus-hinsche/))
   * Hands-on Implementation and Consoluting (Machine Learning)
-- Projects: Welthungerhilfe (computer vision), The Martec (NLP), ...
+- Projects: Welthungerhilfe, Charité radiology (both computer vision), ...
 - Strengths:
   * Python (since 2009)
   * Deep Learning (since 2018)
@@ -107,62 +117,7 @@ environments: dev, staging, prod
 
 ---
 
-# Palladium: Overview
-
-Palladium emerged from a Otto Group BI project to predict parcel
-delivery times.
-
-A presentation of Palladium from PyData 2016 is found [here
-(PDF)](./resources/palladium-pydata-lattner.pdf).
-
-## Key features
-
-- Establish common workflow across teams and roles
-- Avoid boilerplate in ML projects
-- Smooth transition from prototypes to production
-- Scalability
-- Avoid license costs
-
----
-
-# Palladium: Different roles
-
-**Individual Data Scientists**:
-
-- prototype quickly and avoid boilerplate
-- organize code and configuration
-- establish an interface with engineers, deliver API
-
-**Data Science Teams**:
-
-- use a common workflow to access dataset, to model, and evaluate
-- try different algorithms/models on the same problems without hassle
-- try new data with the same algorithm, and compare
-- combine flexible configuration with version control to ensure
-  reproducibility
-
-**Production Engineers**:
-
-- can deploy a Data Scientist's model easily
-- can work on production aspects along well-defined lines, without
-  interfering with work of Data Scientist
-
----
-
-# Palladium: Similar projects
-
-- [Facebook Hydra](https://cli.dev/): *A framework for elegantly
-  configuring complex applications*
-
-- [MLflow](https://www.mlflow.org/): *An open source platform
-  for managing the end-to-end machine learning lifecycle*
-
----
-
 # Iris dataset
-
-What's it like to work with Palladium?  Let's get a sense of that by
-implementing a simple classifier.
 
 In our first example in `step1`, we will make use of the classic
 "Iris" machine learning dataset from 1936.
@@ -197,185 +152,7 @@ the four attributes.
 
 ---
 
-# Palladium: Reading the dataset
-
-You'll find a configuration file in `step1/palladium-config.py`.
-Therein, you'll find the definition of two `dataset_loader`s, which
-are responsible for reading the dataset:
-
-```python
-{
-    'dataset_loader_train': {
-        '__factory__': 'palladium.dataset.CSV',
-        'path': 'iris.data',
-        'names': [
-            'sepal length',
-            'sepal width',
-            'petal length',
-            'petal width',
-            'species',
-        ],
-        'target_column': 'species',
-        'nrows': 100,
-    },
-
-    'dataset_loader_test': {
-        '__copy__': 'dataset_loader_train',
-        'nrows': None,
-        'skiprows': 100,
-    },
-}
-```
-
----
-
-# Palladium: Configuration and code separated
-
-Palladium encourages the separation of configuration and code.
-Machine Learning projects typically have a lot of constants and
-configuration.  Here are some examples:
-
-- Path to the dataset
-
-```python
-        'path': 'iris.data',
-```
-
-- Database configuration
-
-```python
-        'url': 'sqlite:///iris-model.db',
-```
-
-- Hyperparameters of our models
-
-```python
-        'C': 0.1,
-```
-
-Also, we frequently have to deal with differing configuration between
-production and development environments.
-
----
-
-# Palladium: Model definition
-
-```python
-    'model': {
-        '__factory__': 'sklearn.linear_model.LogisticRegression',
-        'C': 0.1,
-    },
-
-    'model_persister': {
-        '__factory__': 'palladium.persistence.Database',
-        'url': 'sqlite:///iris-model.db',
-    },
-```
-
-The model definition uses the configuration key `model`.  As our
-classifier, we'll make use of the implementation of [Logistic
-Regression](http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
-out of scikit-learn.
-
-The `model_persister` entry defines where we'll save the trained model
-and where to read it back from.  The configuration above configures a
-SQLite database to act as the model storage.
-
----
-
-# Palladium: Installation
-
-Let's install Palladium.  We'll first create a
-[virtualenv](https://virtualenv.pypa.io), and install dependencies
-therein:
-
-```bash
-$ python3 -m venv .
-$ source bin/activate  # or: `scripts/activate.bat` on Windows
-$ pip install -U pip
-$ pip install -r step1/requirements.txt
-Collecting palladium (from -r step1/requirements.txt (line 1))...
-...
-Successfully installed ...
-```
-
----
-
-# Palladium: Installation - possible issues
-
-Maybe you're on Windows and you have trouble installing
-[ujson](https://pypi.org/project/ujson/) because you don't have Visual
-Code installed.  Then check out this site which has [binary wheels for
-ujson for Windows](https://www.lfd.uci.edu/~gohlke/pythonlibs/#ujson).
-Here's an example of how you would install ujson from that site (for
-Python 3.6):
-
-```bash
-$ pip install https://download.lfd.uci.edu/pythonlibs/r5uhg2lo/ujson-1.35-cp36-cp36m-win_amd64.whl
-```
-
-If you really want to use [Conda](https://conda.io) instead of vanilla
-Python:
-
-```bash
-$ conda install ujson
-$ pip install -r step1/requirements.txt
-```
-
-> ⚠️ **Note:** For this tutorial, it's not recommended to use Conda.
-Use it if you know what you're doing, but be aware that some things
-will work differently for you going forward.
-
----
-
-# Palladium: Training a model
-
-We already have all pieces in place to fit our first model.  To fit,
-we'll use Palladium's `pld-fit` command along with the `--evaluate`
-option.  On Linux:
-
-```bash
-$ cd step1
-$ pld-fit --evaluate
-INFO:palladium:Loading data...
-...
-INFO:palladium:Train score: 0.9
-...
-INFO:palladium:Test score:  0.82
-...
-INFO:palladium:Wrote model with version 1.
-```
-
-Our classifier reaches an accuracy of 90% on the training set and 82%
-on the test set.
-
----
-
-# Regularization
-
-So what is this `C` parameter of our model about?
-
-![:scale 80%](./resources/ng-regularized-lr.png)
-
----
-
-# Regularization (2)
-
-From the [scikit-learn
-docs](http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html):
-
-> `C`: Inverse of regularization strength; must be a positive
-float. Like in support vector machines, smaller values specify
-stronger regularization.
-
-## ✍️ Exercise
-
-Can we find a better C parameter such that our score on the test set
-improves?
-
----
-
-# Grid search
+# Hyperparameter search
 
 The search for optimal hyperparameters is a very common task in
 machine learning.  In our example, doing the search by hand was still
@@ -389,34 +166,21 @@ One of these algorithms is called *grid search*.
 
 > ⚠️ **Note:** The [scikit-optimize
 package](https://scikit-optimize.github.io/) allows us to search for
-hyperparameters using *Bayesian optimization*.  The Palladium docs
-contain [an example of using
-`skopt.BayesSearchCV`](https://github.com/ottogroup/palladium/blob/master/docs/user/faq.rst#can-i-use-bayesian-optimization-instead-of-grid-search-to-tune-my-hyperparameters)
-instead of `GridSearchCV`, which you're encouraged to try out.
+hyperparameters using *Bayesian optimization*.
 
 ---
 
-# Grid search: Application
-
-`step2/palladium-config.py` contains the parametrization of our grid
-search:
+# GridSearch in sklearn
 
 ```python
-    'grid_search': {
-        'param_grid': {
-            'C': [0.1, 1, 10, 100, 1000],
-         },
-        'cv': 8,
-        'verbose': 4,
-        'n_jobs': -1,
-    },
-```
-
-We use Palladium's `pld-grid-search` command to execute the search:
-
-```bash
-$ cd ../step2
-$ pld-grid-search
+from sklearn import svm, datasets
+from sklearn.model_selection import GridSearchCV
+iris = datasets.load_iris()
+parameters = {'kernel':('linear', 'rbf'), 'C':[0.1, 1, 10, 100, 1000]}
+svc = svm.SVC()
+clf = GridSearchCV(svc, parameters)
+clf.fit(iris.data, iris.target)
+pd.DataFrame(clf.cv_results_)
 ```
 
 ---
@@ -440,774 +204,44 @@ score.
 
 ---
 
-# Grid search and cross validation
+# Hyperparameter search: keras
 
-We set the `cv` parameter in our grid search configuration to 8, which
-means we want to use 8-fold cross validation.  Let's take a look again
-at the output of `pld-grid-search`:
-
-```
-...
-Fitting 8 folds for each of 5 candidates, totalling 40 fits
-...
-        params  split0_test_score  split1_test_score  split2_test_score  \
-3   {'C': 100}           1.000000           1.000000           1.000000
-
-   split3_test_score  split4_test_score  split5_test_score  split6_test_score  \
-3           0.916667           0.916667           1.000000           1.000000
-
-   split7_test_score  mean_test_score  std_test_score  rank_test_score  \
-3           1.000000             0.98        0.035590                1
-...
-```
-
-Using cross validation is very useful if you have a small dataset but
-you still want to get a good idea of how our model's real life
-performance will look like.
+<https://github.com/fchollet/deep-learning-with-python-notebooks/blob/master/chapter13_best-practices-for-the-real-world.ipynb>
 
 ---
 
-# Palladium: Web service
-
-Palladium implements a web service, with which we can use our trained
-model via HTTP to make predictions.
-
-First we need to configure the web service.  In our Iris example, this
-is what we need:
-
-```python
-    'predict_service': {
-        '__factory__': 'palladium.server.PredictService',
-        'mapping': [
-            ('sepal length', 'float'),
-            ('sepal width', 'float'),
-            ('petal length', 'float'),
-            ('petal width', 'float'),
-        ],
-    },
-```
-
-You can find this configuration in `step3/palladium-config.py`.
-
----
-
-# Palladium: Running the web service
-
-```bash
-$ cd ../step3
-$ pld-fit --evaluate
-$ pld-devserver
-```
-
-We can now call the service via HTTP GET.  Follow this link:
-
-http://localhost:5000/predict?sepal%20length=6.3&sepal%20width=2.5&petal%20length=4.9&petal%20width=1.5
-
-This is the result:
-
-```json
-{
-    "metadata": {"error_code":0,"status":"OK"},
-    "result":   "Iris-virginica"
-}
-```
-
----
-
-# Palladium: Python API
-
-It's easy using Palladium's configuration and modules outside of the
-`pld-*` scripts and the built-in web service.  For example, you may
-want to implement your own web service, use Palladium from within your
-Jupyter Notebook, or write a custom command-line script that uses it.
-
-Let's take a look at how this works.  We want to write a script that
-uses our Iris model to predict and produce the following output:
-
-```bash
-$ python predict.py 6.3 2.5 4.9 1.5
-Iris-setosa: 0.0%
-Iris-versicolor: 44.9%
-Iris-virginica: 55.1%
-```
-
----
-
-# Palladium: Python API (2)
-
-Here's the implementation of the script, which you also find in
-`step3/predict.py`:
-
-```python
-import sys
-from palladium.config import get_config
-
-def predict(features):
-    # Get hold of the Palladium configuration in palladium-config.py:
-    config = get_config()
-    # Use the model_persister to load the trained model:
-    model = config['model_persister'].read()
-    # From here on, it's plain scikit-learn:
-    result = model.predict_proba([features])[0]
-    for class_, proba in zip(model.classes_, result):
-        print("{}: {:.1f}%".format(class_, proba*100))
-
-if __name__ == '__main__':
-    predict([float(v) for v in sys.argv[1:]])
-```
-
----
-
-# Skorch: Installation
-
-[Skorch](https://skorch.readthedocs.io/) is a scikit-learn compatible
-library for neural networks.  It's based on [PyTorch](https://pytorch.org).
-
-First install skorch and dstoolbox:
-
-```bash
-$ pip install -r step4/requirements-base.txt  # install skorch and dstoolbox
-```
-
-Then, use the [installation matrix on the PyTorch
-website](https://pytorch.org/get-started/locally/) to find out how to
-install PyTorch on your computer:
-
-![:scale 80%](./resources/pytorch-start-locally.png)
-
----
-
-# Why PyTorch?
-
-Here's from Stefano J. Attardi's blog post titled [How I Shipped a
-Neural Network on iOS with CoreML, PyTorch, and React
-Native](https://attardi.org/pytorch-and-coreml):
-
-> Like most people, I cut my neural teeth on TensorFlow. But my
-honeymoon period had ended. I was getting weary of the kitchen-sink
-approach to library management, the huge binaries, and the extremely
-slow startup times when training. TensorFlow APIs are a sprawling
-mess. Keras mitigates that problem somewhat, but it’s a leaky
-abstraction. Debugging is hard if you don’t understand how things work
-underneath.
-
-> PyTorch is a breath of fresh air. It’s faster to start up, which
-makes iterating more immediate and fun. It has a smaller API, and a
-simpler execution model. Unlike TensorFlow, it does not make you build
-a computation graph in advance, without any insight or control of how
-it gets executed. It feels much more like regular programming, it
-makes things easier to debug, and also enables more dynamic
-architectures – which I haven’t used yet, but a boy can dream.
-
----
-
-# Skorch: Iris
-
-We'll continue working with the Iris dataset.  Instead of a logistic
-regression, we'll use a neural network to do the classification.
-
-You'll find the implementation of the neural network and supporting
-code in `step4/model.py`.  The configuration is in
-`step4/palladium-config.py`.  Let's take a look at the most important
-parts.
-
-A large part of our configuration looks exactly the same as in the
-last step, namely `dataset_loader_train`, `dataset_loader_test` and
-`model_persister`.
-
-The `model` entry is where things get more interesting:
-
-```python
-    'model': {
-        '__factory__': 'model.create_pipeline',
-    },
-```
-
-Our model is produced by a custom function called `create_pipeline`.
-
----
-
-# scikit-learn: Pipelines
-
-A `sklearn.pipeline.Pipeline` is a pipeline of transforms with a final
-estimator (classifier or regressor).  Here's the implementation of
-`model.create_pipeline`:
-
-```python
-def create_pipeline(
-    device='cpu',  # or 'cuda'
-    max_epochs=50,
-    lr=0.1,
-    **kwargs
-):
-    return PipelineY([
-        ('cast', Cast(np.float32)),
-        ('scale', StandardScaler()),
-        ('net', NeuralNetClassifier(
-            MyModule,
-            device=device,
-            max_epochs=max_epochs,
-            lr=lr,
-            train_split=None,
-            **kwargs,
-        ))],
-        y_transformer=LabelEncoder(),
-        predict_use_inverse=True,
-        )
-```
-
----
-
-# scikit-learn: StandardScaler
-
-`StandardScaler` is one of the transforms that scikit-learn itself
-implements.  This transform standardizes features by removing the mean
-and scaling features to unit variance.
-
-From the [scikit-learn
-docs](http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html):
-
-> Standardization of a dataset is a common requirement for many
-machine learning estimators: they might behave badly if the individual
-features do not more or less look like standard normally distributed
-data (e.g. Gaussian with 0 mean and unit variance).
-
-> For instance many elements used in the objective function of a
-learning algorithm (such as the RBF kernel of Support Vector Machines
-or the L1 and L2 regularizers of linear models) assume that all
-features are centered around 0 and have variance in the same
-order. **If a feature has a variance that is orders of magnitude
-larger than others, it might dominate the objective function and make
-the estimator unable to learn from other features correctly as
-expected.**
-
----
-
-# Skorch: NeuralNetClassifier
-
-```python
-from skorch import NeuralNetClassifier
-
-NeuralNetClassifier(
-    module=MyModule,
-    device='cpu',
-    max_epochs=50,
-    lr=0.1,
-    train_split=None,
-    **kwargs,
-)
-```
-
-Class `NeuralNetClassifier` implements a training loop, recording
-metrics, and validation, so you don't have to implement those.
-
-It also implements methods such as `fit` and `predict`, allowing the
-use of PyTorch models in the context of scikit-learn.
-
----
-
-# PyTorch: nn.Module
-
-Our PyTorch `Module` contains the definition of our neural network.
-We instantiate the layers of our network in `__init__`.  In method
-`forward` we accept the data (`X`) and run the data through our
-layers:
-
-```python
-class MyModule(nn.Module):
-    def __init__(self, num_inputs=4, num_units=10, num_outputs=3):
-        super(MyModule, self).__init__()
-
-        self.dense0 = nn.Linear(num_inputs, num_units)
-        self.nonlin = F.relu
-        self.dropout = nn.Dropout(0.5)
-        self.dense1 = nn.Linear(num_units, 10)
-        self.output = nn.Linear(10, num_outputs)
-
-    def forward(self, X, **kwargs):
-        X = self.nonlin(self.dense0(X))
-        X = self.dropout(X)
-        X = F.relu(self.dense1(X))
-        X = F.softmax(self.output(X), dim=-1)
-        return X
-```
-
----
-
-# Learning rate
-
-One of the most important hyperparameters of neural networks is the
-*learning rate*.  It defines, how large our iterative steps are when
-doing gradient descent.  Gradient descent is the optimization
-algorithm that's used in neural networks and many other machine
-learning algorithms.
-
-![:scale 80%](./resources/ng-learning-rate.png)
-
----
-
-# Grid search: Network hyperparameters
-
-In `step4/palladium-config.py`:
-
-```python
-    'grid_search': {
-        'param_grid': {
-            'net__lr': [0.03, 0.1, 0.3],
-        },
-        'cv': 5,
-        'verbose': 4,
-        'n_jobs': 1,
-    },
-```
-
-```bash
-$ pld-grid-search
-```
+# Hyperparameter search: Network hyperparameters (2)
 
 ## ✍️ Exercise
 
-Which learning rate is the best?
+What hyperparameters could we include in the search?
 
 ---
 
-# Grid search: Network hyperparameters (2)
+# Deploying webservice to production
 
-## ✍️ Exercise
+* web service
+* uvicorn
 
-In `step4/palladium-config.py`, look for the comment *YOUR CODE HERE*.
-Try to find a good combination of learning epochs (`net__max_epochs`)
-and learning rate (`net__lr`).  Can you find a combination that gets a
-`mean_test_score` of 96% or better?
+*Exercise*: Use FastAPI to build a web interface
 
 ---
 
-# Skorch: EarlyStopping and LRScheduler
+# Solution
 
-- The
-  [skorch.callbacks.EarlyStopping](https://skorch.readthedocs.io/en/latest/callbacks.html#skorch.callbacks.EarlyStopping)
-  callback allows the stopping of training if further training leads
-  to no more improvements.
+`deploy_iris.py`
 
-- The
-  [skorch.callbacks.LRScheduler](https://skorch.readthedocs.io/en/latest/callbacks.html#skorch.callbacks.LRScheduler)
-  allows us to adapt the learning rate during training, based on
-  arbitrary conditions.
-
-- We can use any learning rate scheduler policy implemented in
-  [torch.optim.lr_scheduler](https://pytorch.org/docs/stable/optim.html),
-  such as
-  [CyclicLR](https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.CyclicLR).
-
-Usage example:
-
-```python
-from skorch.callbacks import EarlyStopping, LRScheduler
-from torch.optim.lr_scheduler import CyclicLR
-
-NeuralNetClassifier(
-    module=MyModule,
-    # ...
-    callbacks=[
-        ('early_stopping', EarlyStopping(patience=10)),
-        ('lr_scheduler', LRScheduler(policy=CyclicLR, base_lr=0.001, max_lr=0.1)),
-    ],
-)
-```
-
----
-
-# Grid search: Parallelization with Dask
-
-If we now consider adding more hyperparameters to the search, such as
-the number of neurons in our network's *hidden layer*, we'll
-understand that the search can quickly take a long time.
-
-```python
-    'grid_search': {
-        'param_grid': {  # 3 * 4 * 4 * 5 folds = 240 fits!
-            'net__lr': [0.03, 0.1, 0.3],
-            'net__max_epochs': [50, 100, 200, 400],
-            'net__module__num_units': [5, 10, 20, 40],
-        },
-```
-
-The search for the best hyperparameters is often the most
-computationally intensive part of machine learning projects.  One
-convenient way to distribute the hyperparameter search with
-scikit-learn among a cluster of computers is by using the
-[Dask](http://dask.pydata.org) integration.  From Dask's homepage:
-
-> *Dask provides advanced parallelism for analytics, enabling
-performance at scale for the tools you love*
-
----
-
-# Dask: One scheduler, many workers
-
-```bash
-$ pip install -U dask distributed bokeh scikit-learn
-```
-
-Open up a new terminal window and **start the Dask scheduler**:
-
-```bash
-$ source bin/activate  # on Windows: scripts/activate.bat
-$ dask-scheduler
-```
-
-Keep the scheduler running.  Now open another terminal window and
-**start a Dask worker**.  You may start an arbitrary number of these
-workers, on any number of computers:
-
-```bash
-$ source bin/activate  # on Windows: scripts/activate.bat
-$ cd step4
-$ export PYTHONPATH=.  # on Windows: set PYTHONPATH=.
-$ dask-worker 127.0.0.1:8786  # IP and port of scheduler
-```
-
-The Dask scheduler includes a dashboard, which in the *Workers* tab
-lists all the workers that are registered with the scheduler.  The
-default address of the dashboard is http://localhost:8787
-
----
-
-# Dask: Run the grid search
-
-Finally, we can start our grid search in another new terminal as
-follows; again, activating the virtual environment, and changing into
-the `step4` directory:
-
-```bash
-$ source bin/activate  # on Windows: scripts/activate.bat
-$ cd step4
-$ export PALLADIUM_CONFIG=palladium-config.py,dask-config.py
-$ # or on Windows: set PALLADIUM_CONFIG=palladium-config.py,dask-config.py
-$ pld-grid-search --save-results=grid-search.csv
-```
-
-The 240 fits take around 130 seconds on my laptop (using a single
-worker).  How long do they take for you?  (Look for the line `Running
-grid search done in...` in the output of `pld-grid-search`.)
-
-Also note that the Dask dashboard includes a *Profile* tab with a
-*flame graph* that shows which parts of the Python code you're running
-use how much CPU time.  [Check it out.](http://localhost:8787/profile)
-
----
-
-# Dask: ✍️ Exercise: Set up a cluster
-
-Get together in groups of two or three.  Decide which one of you runs
-the central scheduler, start it, and remember its network address.
-Make sure you are in the same network (LAN) as the others in your
-group.  Now start up a worker on each one of your computers and
-connect it to the scheduler.  Use the dashboard to verify that all
-Dask workers are indeed connected.
-
-The one in your group running the scheduler can now run the
-`pld-grid-search` command as before, and you should see it distribute
-the work among all the workers.
-
-> ⚠️ **Note:** Again, make sure that you start the worker like before,
-in the right directory, with the environment active, and with
-`PYTHONPATH` set.  `pld-grid-search` also needs to be run like before,
-with correct `PALLADIUM_CONFIG` and venv.  Lastly, make sure you point
-the workers to the right network address using the command-line
-argument.
-
-How much faster can you make the grid search go using your cluster?
-
-By the way: The Dask docs have guides on [how to set up Dask
-clusters](https://docs.dask.org/en/latest/setup.html) in different
-environments, such as with YARN, Kubernetes, and more.
-
----
-
-# Dask dataframes for analyzing big data
-
-Dask dataframes are useful when the dataset you want to analyze is
-larger than your machine's RAM.
-
-```bash
-$ pip install dask[dataframe]
-```
-
-In our example script in `step4/dd.py`, we create a number of CSV
-files with random values (in `create_csvs`).  These are relatively
-small files and they'll fit in your RAM (they're about 30MB when
-loaded).
-
-We then compare the use of pandas to compute the means of each column
-(in `compute_mean_pandas`) with the use of Dask dataframes to do the
-same (in `compute_mean_dask`).
-
-You can run the script and compare the times it takes for each method:
-
-```bash
-$ python dd.py
-```
-
----
-
-# Dask dataframes for analyzing big data (2)
-
-When you ran the script, Dask defaulted to the [Single-Machine
-Scheduler](https://docs.dask.org/en/latest/setup/single-machine.html)
-to perform the computation.  That is, it wasn't using the distributed
-`dask-scheduler` and workers that we set up previously.
-
-The Single-Machine Scheduler is still useful in that it allows the use
-of local threads or processes to split up the work, and it allows us
-to work on data that is larger than memory.
-
-## ✍️ Exercise
-
-Go back to your group from the previous exercise and run the `dd.py`
-example script such that it uses your group's distributed cluster.
-
-To use your cluster's central scheduler, you must modify the line in
-`dd.py` that says "*# use distributed scheduler*."
-
----
-
-# Determine wine quality with skorch
-
-Let's now go back to the Iris neural net classifier that we developed
-previously and apply it to a different dataset.
-
-We'll use the [Wine Quality Data Set](https://www.openml.org/d/40691)
-with the goal to model wine quality based on physicochemical tests
-[[Cortez et al., 2009]](http://www3.dsi.uminho.pt/pcortez/wine/).
-
-Folder `step5` contains a copy of `step4`. First, we will have to
-implement a Palladium `DatasetLoader` to read the dataset from
-[OpenML.org](https://www.openml.org/).  We will then adapt the neural
-network from our last example to do the classification.
-
-Note that when you are finished implementing the DatasetLoader, you'll
-see an error trying to fit the neural network because of a dimension
-mismatch.
-
----
-
-# A DatasetLoader for OpenML
-
-The configuration in `step5/palladium-config.py` was updated to refer
-to a new class `OpenML`, which will read the dataset from
-[OpenML.org](https://www.openml.org):
-
-```python
-    'dataset_loader_train': {
-        '__factory__': 'dataset.OpenML',
-        'name': 'wine-quality-red',
-    },
-```
-
-## ✍️ Exercise
-
-Complete the implementation of the `OpenML` class in
-`step5/dataset.py`.  The source file has important hints for you.
-
-```python
-from sklearn.datasets import fetch_openml
-
-class OpenML:
-    def __init__(self, name):
-        self.name = name
-
-    def __call__(self):
-        # YOUR CODE HERE:
-```
-
----
-
-# MyModule: Input and output parameters
-
-## ✍️ Exercise (continued)
-
-The feature matrix of our new dataset has a shape (dimensionality)
-that is different to the shape of our Iris feature matrix.  Also, the
-number of classes is different.
-
-Determine the shape of the new feature matrix by adding print
-statements into your `OpenML` implementation.
-
-Try to find out which parameters to set in `step5/palladium-config.py`
-so that the network can be trained:
-
-```python
-    'model': {
-        '__factory__': 'model.create_pipeline',
-        # YOUR CODE HERE:
-    },
-```
-
-As soon as you are able to train the network (use `pld-fit`), take a
-look at the grid search parameters inside the configuration file.  Can
-you find a configuration of hyperparameters with which you can reach
-an accuracy of 55% or more on the `mean_test_score`?
-
----
-
-# Regression instead of classification
-
-We can pose the prediction of the wine quality score as a regression
-problem.  That is, instead of predicting probabilities for the 10 or
-so classes, we will try to predict a single number: the actual score
-as a continuous value between 0 and 10.
-
-## ✍️ Exercise
-
-- We make a copy of `step5` and call the new directory `step6`
-- Our network needs to have one output instead of ten
-- The `softmax` function is not used in regression: remove it
-- We use the `neg_mean_absolute_error` instead of `accuracy` in
-  `palladium-config.py`
-- We make use of `NeuralNetRegressor` instead of `NeuralNetClassifier`
-- We'll replace our `PipelineY` with `sklearn.pipeline.Pipeline`.
-  `LabelEncoder` and `predict_use_inverse` are no longer useful.
-  (tricky!)
-- Let's hack our `DatasetLoader` to return the target (or `y`) vector
-  as `float32`: `target = dataset.target.astype('float32')`.
-- For regression problems, skorch expects a target of shape NxM, where
-  each sample can have multiple regression targets: `target =
-  target.reshape(-1, 1)`.
-
----
-
-# Random Forest instead of neural network
-
-## ✍️ Exercise
-
-- Rewrite the `model` entry in `step6/palladium-config.py` to use
-  `sklearn.ensemble.RandomForestRegressor` instead of our
-  `create_pipeline` function.
-
-  *Hint:* You'll need the following lines in your configuration:
-
-  ```python
-      'model': {
-          '__factory__': 'sklearn.ensemble.RandomForestRegressor',
-          # ...
-      },
-  ```
-
-- Read through the most important parameters of class
-  [`RandomForestregressor` in the scikit-learn
-  documentation](http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html).
-  Use a few parameters to run a grid search.  What's the best
-  `mean_test_score` can you can get?
-
----
-
-# Skorch: Sentiment analysis with RNNs
-
-Our last skorch example demonstrates the use of RNNs to do sentiment
-analysis on text.  We use the [Large Movie Review
-Dataset](http://ai.stanford.edu/~amaas/data/sentiment/) to train our
-network.
-
-The implementation follows the `rnn_classifier` example within the
-skorch source tree.  The implementation is already provided for you in
-`step7/palladium-config.py` and `step7/model.py`.  Before we dive into
-how the model works, let's train it:
-
-```bash
-$ cd ../step7
-$ pld-fit --evaluate
-```
-
-This may take a while if you're doing this on a CPU.
-
----
-
-# Sentiment analysis as a service
-
-After the training finished, we can fire up our web service again:
-
-```bash
-$ pld-devserver
-```
-
-And then call it like so:
-
-http://localhost:5000/predict?text=A+fantastic+movie+despite+its+flaws
-
-The response should look similar to this:
-
-```json
-{"result":[0.348106294870377,0.651893734931946],
- "metadata":{"status":"OK","error_code":0}}
-```
-
----
-
-# Skorch: Sentiment analysis with RNNs (2)
-
-Let's take a look at the ["Predict sentiment on the IMDB Dataset"
-notebook](https://github.com/dnouri/skorch/blob/master/examples/rnn_classifer/RNN_sentiment_classification.ipynb)
-to understand how the model works.
-
-```bash
-$ pip install jupyter
-$ jupyter notebook
-```
-
-Look for `RNN_sentiment_classification.ipynb`.
-
----
-
-# Skorch: Debug network layers with pdb
-
-To get a better intuition of what the individual layers of our neural
-net actually do, we use the [Python
-Debugger](https://docs.python.org/3/library/pdb.html) to step through
-the `RNNClassifier.forward` method in `step7/model.py`.  Place a line
-right after `def forward(self, X)`:
-
-```python
-    def forward(self, X):
-        import pdb; pdb.set_trace()  # this is the new line!
-        embeddings = self.emb(X)
-        # from the recurrent layer, only take the activities from the
-        # ...
-```
-
-And then run `pld-fit` again.  This will drop you into the debugger's
-prompt.  Use the `help` command to find out what [debugger
-commands](https://docs.python.org/3/library/pdb.html#debugger-commands)
-exist:
-
-```
-(Pdb) help
-
-Documented commands (type help <topic>):
-========================================
-EOF    c          d        h         list      q        rv       undisplay
-a      cl         debug    help      ll        quit     s        unt
-alias  clear      disable  ignore    longlist  r        source   until
-args   commands   display  interact  n         restart  step     up
-b      condition  down     j         next      return   tbreak   w
-break  cont       enable   jump      p         retval   u        whatis
-bt     continue   exit     l         pp        run      unalias  where
-```
+`uvicorn deploy_iris:app --reload --log-level=debug`
 
 ---
 
 # Deploying models to production
 
-We've seen how `pld-devserver` works for running a web service
-locally, but how do we go about making available our model on an
-actual server?
-
 We will now walk through these steps:
 
 - Set up an AWS account (if you don't have one yet)
 - Set up an EC2 micro instance
-- SSH into the instance to install dependencies and run the Palladium
-  web service
+- SSH into the instance to install dependencies and run the web service
 
 ---
 
@@ -1365,17 +399,11 @@ Successfully installed ...
 
 # Use Gunicorn to serve the web service
 
-We've previously used `pld-devserver` to run requests against
-Palladium's built-in web service.  `pld-devserver` uses Flask's
-built-in web server that's suitable for development, but not for
-production environments.  Instead, we'll now install and use
-[Gunicorn](https://gunicorn.org/) to serve the web service:
-
 ```bash
 $ pip install gunicorn
 $ cd step3
-$ pld-fit
-$ gunicorn palladium.wsgi:app -b 0.0.0.0:8080
+$ # TODO train the model
+$ gunicorn deploy_iris:app -b 0.0.0.0:8080
 ```
 
 Try to navigate your browser to this URL, and you'll notice that it's
@@ -1460,30 +488,11 @@ $ ab -n 10000 -c 10 "http://localhost:8080/predict?sepal%20length=6.3&sepal%20wi
 
 ![:scale 100%](./resources/py-spy.png)
 
-How come we're spending most of our time executing SQL statements?
-What's the `read` function in `palladium.persistence` at line 421
-doing?  Find out!
-
 ---
 
 # Profiling our web app (3)
 
-The culprit is the Palladium `model_persister`, which is set up to
-read the persisted model from disk on every request!  This is not
-useful at all.  Thankfully, there's a wrapper called
-`CachedUpdatePersister` that fixes this issue, as it keeps the model
-in memory.  Replace the `model_perister` entry in the
-`step3/palladium-config.py` configuration file with the following:
 
-```python
-    'model_persister': {
-        '__factory__': 'palladium.persistence.CachedUpdatePersister',
-        'impl': {
-            '__factory__': 'palladium.persistence.Database',
-            'url': 'sqlite:///iris-model.db',
-        },
-    },
-```
 
 Now run the `ab` test again.  How many requests per second do you get?
 
@@ -1500,7 +509,7 @@ Now run the `ab` test again.  How many requests per second do you get?
 - Installed system dependencies (`apt install`) and Python project
   dependencies (`pip install`) on our EC2 instance
 
-- Used Gunicorn to serve the Palladium web service
+- Used Gunicorn to serve the FastAPI web service
 
 - Benchmarked (`ab`) and profiled (`py-spy`) our web service
 
@@ -1532,10 +541,9 @@ On the server, create this supervisor config file and save it as
 
 ```ini
 [program:webservice]
-command=/home/ubuntu/tut-productive-ml/bin/gunicorn palladium.wsgi:app -b 0.0.0.0:8080
+command=/home/ubuntu/tut-productive-ml/bin/gunicorn deploy_iris.wsgi:app -b 0.0.0.0:8080
 directory=/home/ubuntu/tut-productive-ml/step3/
 user=ubuntu
-environment=PALLADIUM_CONFIG="palladium-config.py"
 ```
 
 You can find out more about [Supervisor's configuration files in the
@@ -1757,26 +765,6 @@ Now that our connection is secure from eavesdropping, how can we
 restrict access such that only people with a valid username and
 password can use it?
 
-Palladium allows us to add decorators to the existing web hooks.  One
-thing we can do with these decorators is to require authentication.
-Flask's website has a snippet that implements HTTP Basic Auth as a
-decorator. You can find this
-snippet in `step8/mybasicauth.py`.
-
-What's left is to hook up this decorator with our Palladium web
-service.  Add this piece of configuration to
-`step8/palladium-config.py`:
-
-```python
-    'predict_decorators': [
-        'mybasicauth.requires_auth',
-    ],
-
-    'alive_decorators': [
-        'mybasicauth.requires_auth',
-    ],
-```
-
 ---
 
 # Programmatic use of the web service
@@ -1807,7 +795,6 @@ print(result)
 
 # End
 
-- https://github.com/ottogroup/palladium
 - https://github.com/scikit-learn/scikit-learn
 - https://github.com/skorch-dev/skorch
 - https://github.com/dask/dask
