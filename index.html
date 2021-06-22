@@ -175,6 +175,7 @@ hyperparameters using *Bayesian optimization*.
 ```python
 from sklearn import svm, datasets
 from sklearn.model_selection import GridSearchCV
+import pandas as pd
 iris = datasets.load_iris()
 parameters = {'kernel':('linear', 'rbf'), 'C':[0.1, 1, 10, 100, 1000]}
 svc = svm.SVC()

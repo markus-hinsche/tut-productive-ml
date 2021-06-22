@@ -1,3 +1,5 @@
 palladium
 scikit-learn
 scipy
+fastapi
+gunicorn

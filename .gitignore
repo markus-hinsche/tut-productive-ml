@@ -1,4 +1,5 @@
 mnist_kt_test/
+data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
